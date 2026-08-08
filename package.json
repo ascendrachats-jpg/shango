@@ -1,0 +1,40 @@
+{
+  "name": "figma-make-app",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "vite build",
+    "check:budget": "node scripts/check-bundle-budget.mjs",
+    "build:checked": "pnpm build && pnpm check:budget",
+    "preview": "vite preview",
+    "format": "oxfmt",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "better-auth": "^1.6.25",
+    "drizzle-orm": "^0.45.2",
+    "firebase": "^12.17.0",
+    "lucide-react": "^1.24.0",
+    "pg": "^8.22.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-router-dom": "^7.18.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.0.0",
+    "@types/node": "^22.0.0",
+    "@types/pg": "^8.20.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^6.0.0",
+    "jsdom": "^29.1.1",
+    "oxfmt": "^0.2.0",
+    "tailwindcss": "^4.0.0",
+    "typescript": "^5.7.0",
+    "vite": "^8.0.0",
+    "vitest": "^4.1.10"
+  }
+}

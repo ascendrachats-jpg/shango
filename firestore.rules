@@ -1,0 +1,19 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /showcase_projects/{projectId} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == request.resource.data.creatorId;
+    }
+    
+    match /builders/{builderId} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == builderId;
+    }
+    
+    match /community_feed/{feedId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+  }
+}

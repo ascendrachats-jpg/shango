@@ -1,0 +1,1295 @@
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600&display=swap');
+@import 'tailwindcss';
+
+:root {
+  /* ── Surfaces ── */
+  --surface-0: #0a0a0c;
+  --surface-1: #0f0f12;
+  --surface-2: #141416;
+  --surface-3: #1a1a1d;
+  --surface-4: #222225;
+
+  /* ── Text ── */
+  --text-primary: rgba(255, 255, 255, 0.9);
+  --text-secondary: rgba(255, 255, 255, 0.55);
+  --text-muted: rgba(255, 255, 255, 0.3);
+  --text-disabled: rgba(255, 255, 255, 0.12);
+
+  /* ── Borders ── */
+  --border-subtle: rgba(255, 255, 255, 0.04);
+  --border-default: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.16);
+
+  /* ── Fonts ── */
+  --font-geist: 'Geist', 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono-jetbrains: 'JetBrains Mono', 'Fira Code', monospace;
+
+  /* ── Radius system ── */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 20px;
+
+  /* ── Semantic color tokens ── */
+  --color-live: #4ade80;
+  --color-live-glow: rgba(74, 222, 128, 0.6);
+  --color-live-bg: rgba(74, 222, 128, 0.07);
+  --color-live-border: rgba(74, 222, 128, 0.18);
+  --color-warn: #f59e0b;
+  --color-warn-bg: rgba(245, 158, 11, 0.08);
+  --color-error: #ef4444;
+  --color-error-bg: rgba(239, 68, 68, 0.06);
+  --color-error-border: rgba(239, 68, 68, 0.14);
+
+  /* ── Shango African Identity Colors ── */
+  --color-terracotta: #E07A5F;
+  --color-terracotta-bg: rgba(224, 122, 95, 0.1);
+  --color-savannah-gold: #F2CC8F;
+  --color-savannah-gold-bg: rgba(242, 204, 143, 0.1);
+  --color-indigo-depths: #3D405B;
+  --color-indigo-depths-bg: rgba(61, 64, 91, 0.2);
+
+  /* ── Motion system ── */
+  --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-gentle: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --duration-instant: 0.06s;
+  --duration-fast: 0.14s;
+  --duration-base: 0.22s;
+  --duration-slow: 0.32s;
+  --duration-gentle: 0.48s;
+
+  /* ── Elevation (shadows) ── */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.55);
+  --shadow-xl: 0 32px 80px rgba(0, 0, 0, 0.65);
+  --shadow-overlay: 0 1px 0 rgba(255, 255, 255, 0.04) inset;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--surface-0);
+  color: var(--text-primary);
+  font-family: var(--font-geist);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::-webkit-scrollbar {
+  width: 2px;
+  height: 2px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.scroll-hidden {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.scroll-hidden::-webkit-scrollbar {
+  display: none;
+}
+
+::selection {
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+}
+
+/* SHANGO keyframes */
+@keyframes border-orbit {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes awakening-pulse {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes pulse-ring {
+  0% {
+    transform: translate(-50%, -50%) scale(0.6);
+    opacity: 0.8;
+  }
+
+  100% {
+    transform: translate(-50%, -50%) scale(1.4);
+    opacity: 0;
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes shango-hardware-press {
+  0% {
+    transform: scale(1);
+    box-shadow: none;
+  }
+
+  100% {
+    transform: scale(0.96);
+    box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.8);
+  }
+}
+
+@keyframes shango-spring-slide {
+  0% {
+    transform: scaleX(0);
+    opacity: 0;
+  }
+
+  100% {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+}
+
+@keyframes shango-kinetic-flow {
+  0% {
+    transform: translateY(12px) scale(0.98);
+    filter: blur(12px);
+    opacity: 0;
+  }
+
+  100% {
+    transform: translateY(0) scale(1);
+    filter: blur(0px);
+    opacity: 1;
+  }
+}
+
+@keyframes shango-decode-pulse {
+  0% {
+    opacity: 0.3;
+    filter: blur(2px);
+    transform: scaleX(0.98);
+    transform-origin: left;
+  }
+
+  50% {
+    opacity: 1;
+    filter: blur(0px);
+    transform: scaleX(1);
+    transform-origin: left;
+  }
+
+  100% {
+    opacity: 0.3;
+    filter: blur(2px);
+    transform: scaleX(0.98);
+    transform-origin: left;
+  }
+}
+
+@keyframes shango-pulse-neon {
+
+  0%,
+  100% {
+    filter: drop-shadow(0 0 4px #f97316);
+    opacity: 0.8;
+  }
+
+  50% {
+    filter: drop-shadow(0 0 16px #f97316);
+    opacity: 1;
+  }
+}
+
+@keyframes slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInFromRight {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInPanel {
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Premium modal entrance — hardware-accelerated spring */
+@keyframes shango-modal-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.97) translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes pageFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.shango-page-transition {
+  opacity: 1;
+}
+
+/* Context menus / dropdowns */
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.97) translateY(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes contextMenuIn {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeOut {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes voice-ring {
+  0% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+
+  100% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+}
+
+@keyframes shrink-to-left {
+  from {
+    transform: scaleX(1);
+  }
+
+  to {
+    transform: scaleX(0);
+  }
+}
+
+/* ─── SHANGO Motion Language ─────────────────────────────────────────────── */
+
+/* Button philosophy: respond, don't just change color. Never bounce. */
+.shango-btn {
+  position: relative;
+  cursor: pointer;
+  border: none;
+  outline: none;
+  font-family: var(--font-geist);
+  transition:
+    background 0.16s ease,
+    color 0.16s ease,
+    box-shadow 0.2s ease,
+    transform 0.14s cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 0.16s ease,
+    opacity 0.16s ease;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.shango-btn:hover {
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+.shango-btn:active {
+  transform: scale(0.975);
+  transition-duration: 0.06s;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+}
+
+/* Ghost button variant */
+.shango-btn-ghost {
+  background: transparent;
+  color: var(--text-muted);
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 12.5px;
+  letter-spacing: 0.01em;
+  transition:
+    color 0.16s ease,
+    background 0.16s ease,
+    transform 0.14s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.shango-btn-ghost:hover {
+  color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.04);
+  transform: none;
+  box-shadow: none;
+}
+
+.shango-btn-ghost:active {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.06);
+  transform: scale(0.97);
+  box-shadow: none;
+}
+
+/* Icon button */
+.shango-btn-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border-radius: 6px;
+  color: var(--text-muted);
+  transition:
+    color 0.16s ease,
+    background 0.16s ease,
+    transform 0.14s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.shango-btn-icon:hover {
+  color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.05);
+  transform: none;
+  box-shadow: none;
+}
+
+.shango-btn-icon:active {
+  transform: scale(0.88);
+  transition-duration: 0.06s;
+  box-shadow: none;
+}
+
+/* Primary/white button */
+.shango-btn-primary {
+  background: rgba(255, 255, 255, 0.9);
+  color: #080808;
+  border-radius: 8px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.shango-btn-primary:hover {
+  background: #ffffff;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.12);
+}
+
+.shango-btn-primary:active {
+  background: rgba(255, 255, 255, 0.82);
+  transform: scale(0.975);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.shango-btn-primary:disabled {
+  opacity: 0.28;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* ─── Input focus philosophy ─────────────────────────────────────────────── */
+.shango-input {
+  background: var(--surface-2);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
+  color: var(--text-primary);
+  font-family: var(--font-geist);
+  outline: none;
+  transition:
+    border-color 0.22s ease,
+    box-shadow 0.22s ease,
+    background 0.22s ease;
+}
+
+.shango-input::placeholder {
+  color: var(--text-disabled);
+}
+
+.shango-input:hover {
+  border-color: var(--border-default);
+}
+
+.shango-input:focus {
+  border-color: rgba(255, 255, 255, 0.18);
+  background: var(--surface-1);
+  box-shadow:
+    0 0 0 3px rgba(255, 255, 255, 0.03),
+    0 2px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* ─── Panel settle philosophy ────────────────────────────────────────────── */
+.shango-panel-enter {
+  animation: panelSettle 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.shango-modal-enter {
+  animation: modalSettle 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.shango-sheet-enter {
+  animation: sheetSettle 0.32s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.shango-overlay-enter {
+  animation: fadeIn 0.22s ease both;
+}
+
+@keyframes panelSettle {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes modalSettle {
+  from {
+    opacity: 0;
+    transform: scale(0.97) translateY(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes sheetSettle {
+  from {
+    opacity: 0;
+    transform: translateX(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* ─── Toast animations ───────────────────────────────────────────────────── */
+.shango-toast-enter {
+  animation: toastIn 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.shango-toast-exit {
+  animation: toastOut 0.22s ease forwards;
+}
+
+@keyframes toastIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes toastOut {
+  to {
+    opacity: 0;
+    transform: translateY(4px) scale(0.96);
+  }
+}
+
+/* ─── Command palette ────────────────────────────────────────────────────── */
+.shango-command-enter {
+  animation: commandSettle 0.24s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes commandSettle {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ─── List item stagger ──────────────────────────────────────────────────── */
+.shango-list-item {
+  animation: listItemIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes listItemIn {
+  from {
+    opacity: 0;
+    transform: translateX(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* ─── Card hover lift ────────────────────────────────────────────────────── */
+.shango-card {
+  transition:
+    background 0.2s ease,
+    box-shadow 0.22s ease,
+    border-color 0.2s ease,
+    transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.shango-card:hover {
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.shango-card:active {
+  transform: translateY(0) scale(0.99);
+  transition-duration: 0.08s;
+}
+
+/* ─── Sidebar nav item ───────────────────────────────────────────────────── */
+.shango-nav-item {
+  transition:
+    color 0.16s ease,
+    background 0.16s ease,
+    padding-left 0.2s ease;
+}
+
+.shango-nav-item:hover {
+  color: var(--text-secondary) !important;
+  background: rgba(255, 255, 255, 0.04) !important;
+}
+
+.shango-nav-item.active {
+  color: var(--text-primary) !important;
+}
+
+/* ─── Tab indicator slide ────────────────────────────────────────────────── */
+.shango-tab {
+  position: relative;
+  transition: color 0.2s ease;
+}
+
+.shango-tab::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1.5px;
+  background: var(--text-primary);
+  transform: scaleX(0);
+  transition: transform 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+  transform-origin: left;
+}
+
+.shango-tab.active::after {
+  transform: scaleX(1);
+}
+
+/* ─── SHANGO loading pulse (replaces spinners) ───────────────────────────── */
+.shango-loading-dot {
+  display: inline-block;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--text-secondary);
+  animation: loadingDot 1.4s ease-in-out infinite;
+}
+
+.shango-loading-dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.shango-loading-dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes loadingDot {
+
+  0%,
+  80%,
+  100% {
+    transform: scale(0.6);
+    opacity: 0.3;
+  }
+
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes shango-breathe {
+
+  0%,
+  100% {
+    opacity: 0.6;
+  }
+
+  50% {
+    opacity: 1.0;
+  }
+}
+
+@keyframes shango-aura-pulse {
+
+  0%,
+  100% {
+    box-shadow: 0 0 0px 0px rgba(255, 255, 255, 0);
+  }
+
+  50% {
+    box-shadow: 0 0 40px -10px var(--aura-color);
+  }
+}
+
+@keyframes shango-blur-reveal {
+  0% {
+    opacity: 0;
+    filter: blur(8px);
+    transform: translateY(8px);
+  }
+
+  100% {
+    opacity: 1;
+    filter: blur(0px);
+    transform: translateY(0);
+  }
+}
+
+@keyframes shango-marquee {
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes shango-singularity-collapse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+    filter: brightness(1);
+  }
+
+  40% {
+    transform: scale(1.05) scaleY(1.1);
+    opacity: 1;
+    filter: brightness(2);
+  }
+
+  100% {
+    transform: scale(0.01) scaleY(0.01);
+    opacity: 0;
+    filter: brightness(4);
+  }
+}
+
+@keyframes shango-singularity-expand {
+  0% {
+    transform: scale(0.01) scaleY(0.01);
+    opacity: 0;
+    filter: brightness(4);
+  }
+
+  100% {
+    transform: scale(50) scaleY(50);
+    opacity: 1;
+    filter: brightness(1);
+    background: white;
+  }
+}
+
+@keyframes shango-core-breathe {
+  0% {
+    filter: drop-shadow(0 0 12px var(--aura-color)) brightness(1);
+    transform: scale(1);
+  }
+
+  100% {
+    filter: drop-shadow(0 0 24px var(--aura-color)) brightness(1.3);
+    transform: scale(1.02);
+  }
+}
+
+/* ─── Chip / tag hover ───────────────────────────────────────────────────── */
+.shango-chip {
+  transition:
+    background 0.16s ease,
+    border-color 0.16s ease,
+    color 0.16s ease,
+    transform 0.14s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.shango-chip:active {
+  transform: scale(0.97);
+  transition-duration: 0.07s;
+}
+
+/* ─── Smooth surface transitions (for panels, drawers) ───────────────────── */
+.shango-surface {
+  transition: background 0.22s ease, border-color 0.22s ease;
+}
+
+/* ─── Resize handle pulse ────────────────────────────────────────────────── */
+.shango-resize-handle {
+  transition: background 0.2s ease, opacity 0.2s ease;
+}
+
+.shango-resize-handle:hover {
+  background: rgba(255, 255, 255, 0.12) !important;
+}
+
+/* ─── Status badge ───────────────────────────────────────────────────────── */
+.shango-status-live {
+  position: relative;
+}
+
+.shango-status-live::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  animation: statusPulse 2.4s ease-in-out infinite;
+}
+
+@keyframes statusPulse {
+
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.06);
+  }
+
+  50% {
+    box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.01);
+  }
+}
+
+@keyframes shango-pulse-awareness {
+
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.85;
+    transform: scale(1.25);
+  }
+}
+
+@keyframes shango-fade-breathe {
+
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+
+  50% {
+    opacity: 0.75;
+  }
+}
+
+/* ─── Live status dot ────────────────────────────────────────────────────── */
+.live-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #4ade80;
+  box-shadow: 0 0 5px rgba(74, 222, 128, 0.6);
+  animation: live-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes scroll-hint-bob {
+
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.4;
+  }
+
+  50% {
+    transform: translateY(5px);
+    opacity: 0.22;
+  }
+}
+
+@keyframes live-pulse {
+
+  0%,
+  100% {
+    opacity: 1;
+    box-shadow: 0 0 5px rgba(74, 222, 128, 0.6);
+  }
+
+  50% {
+    opacity: 0.65;
+    box-shadow: 0 0 10px rgba(74, 222, 128, 0.3);
+  }
+}
+
+/* ─── Skeleton shimmer ───────────────────────────────────────────────────── */
+.shango-skeleton {
+  background: linear-gradient(90deg,
+      var(--surface-2) 0%,
+      var(--surface-3) 50%,
+      var(--surface-2) 100%);
+  background-size: 200% 100%;
+  animation: skeleton-sweep 1.6s ease-in-out infinite;
+  border-radius: var(--radius);
+}
+
+@keyframes skeleton-sweep {
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* ─── Empty state ────────────────────────────────────────────────────────── */
+.shango-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 80px 40px;
+  gap: 12px;
+}
+
+.shango-empty-icon {
+  opacity: 0.18;
+  margin-bottom: 4px;
+}
+
+.shango-empty-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  font-family: var(--font-geist);
+  letter-spacing: -0.01em;
+}
+
+.shango-empty-body {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: var(--font-geist);
+  line-height: 1.7;
+  max-width: 260px;
+}
+
+/* ─── Page section label ─────────────────────────────────────────────────── */
+.shango-section-label {
+  font-size: 9px;
+  font-family: var(--font-mono-jetbrains);
+  color: var(--text-muted);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* ─── Divider ────────────────────────────────────────────────────────────── */
+.shango-divider {
+  height: 1px;
+  background: var(--border-subtle);
+  border: none;
+  margin: 0;
+}
+
+/* ─── Monogram avatar ────────────────────────────────────────────────────── */
+.shango-monogram {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-3);
+  border: 1px solid var(--border-default);
+  font-family: var(--font-mono-jetbrains);
+  font-weight: 700;
+  color: var(--text-secondary);
+  letter-spacing: -0.02em;
+  flex-shrink: 0;
+}
+
+/* ─── Focus ring (keyboard accessible) ──────────────────────────────────── */
+.shango-focus-ring:focus-visible {
+  outline: 1.5px solid rgba(255, 255, 255, 0.3);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* ─── Hover text link ────────────────────────────────────────────────────── */
+.shango-link {
+  color: var(--text-muted);
+  transition: color var(--duration-base) ease;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.shango-link:hover {
+  color: var(--text-secondary);
+}
+
+/* ─── Status badge compound ──────────────────────────────────────────────── */
+.shango-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 7px;
+  border-radius: var(--radius-xs);
+  font-size: 9px;
+  font-family: var(--font-mono-jetbrains);
+  letter-spacing: 0.06em;
+  font-weight: 500;
+}
+
+.shango-badge-live {
+  background: var(--color-live-bg);
+  border: 1px solid var(--color-live-border);
+  color: var(--color-live);
+}
+
+.shango-badge-warn {
+  background: var(--color-warn-bg);
+  border: 1px solid rgba(245, 158, 11, 0.18);
+  color: var(--color-warn);
+}
+
+.shango-badge-error {
+  background: var(--color-error-bg);
+  border: 1px solid var(--color-error-border);
+  color: var(--color-error);
+}
+
+.shango-badge-muted {
+  background: var(--surface-3);
+  border: 1px solid var(--border-default);
+  color: var(--text-muted);
+}
+
+/* ─── Subtle animated gradient for hero areas ────────────────────────────── */
+@keyframes gradient-drift {
+
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+
+  50% {
+    opacity: 0.65;
+  }
+}
+
+/* ─── Float — for empty state icons ─────────────────────────────────────── */
+@keyframes shango-float {
+
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+.shango-float {
+  animation: shango-float 3.6s ease-in-out infinite;
+}
+
+/* ─── Message enter ──────────────────────────────────────────────────────── */
+@keyframes msgSettle {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.shango-msg-enter {
+  animation: msgSettle 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* ─── Version restore hover ──────────────────────────────────────────────── */
+.shango-version-actions {
+  opacity: 0;
+  transition: opacity 0.14s ease;
+}
+
+.shango-version-row:hover .shango-version-actions {
+  opacity: 1;
+}
+
+/* ─── SHANGO grid background ─────────────────────────────────────────────── */
+.shango-grid-bg {
+  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+  background-size: 18px 18px;
+}
+
+/* ─── Builder workspace identity strip ───────────────────────────────────── */
+.shango-workspace-header {
+  position: relative;
+}
+
+.shango-workspace-header::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.06) 30%, rgba(255, 255, 255, 0.12) 50%, rgba(255, 255, 255, 0.06) 70%, transparent 100%);
+  pointer-events: none;
+}
+
+/* ─── SHANGO page arrival ────────────────────────────────────────────────── */
+@keyframes shango-page-arrive {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.shango-page-arrive {
+  animation: shango-page-arrive 0.32s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* ─── SHANGO stop trigger breathe ───────────────────────────────────────── */
+@keyframes shango-stop-breathe {
+
+  0%,
+  100% {
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+
+  50% {
+    border-color: rgba(255, 255, 255, 0.18);
+  }
+}
+
+/* ─── Conversation panel slide transition ───────────────────────────────── */
+@keyframes shango-convo-arrive {
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes shango-convo-depart {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+}
+
+/* ─── SHANGO content fade-up ─────────────────────────────────────────────── */
+@keyframes shango-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.shango-fade-up {
+  animation: shango-fade-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* ─── Staggered children ─────────────────────────────────────────────────── */
+.shango-stagger>*:nth-child(1) {
+  animation-delay: 0ms;
+}
+
+.shango-stagger>*:nth-child(2) {
+  animation-delay: 40ms;
+}
+
+.shango-stagger>*:nth-child(3) {
+  animation-delay: 80ms;
+}
+
+.shango-stagger>*:nth-child(4) {
+  animation-delay: 120ms;
+}
+
+.shango-stagger>*:nth-child(5) {
+  animation-delay: 160ms;
+}
+
+.shango-stagger>*:nth-child(6) {
+  animation-delay: 200ms;
+}
+
+/* ─── Reduced motion ─────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+:root[data-reduce-motion="true"] *,
+:root[data-reduce-motion="true"] *::before,
+:root[data-reduce-motion="true"] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* ─── Keyboard focus ring ────────────────────────────────────────────────── */
+:focus-visible {
+  outline: 1.5px solid rgba(255, 255, 255, 0.28);
+  outline-offset: 2px;
+  border-radius: 5px;
+}
+
+/* Suppress focus ring for pointer/touch interactions */
+:focus:not(:focus-visible) {
+  outline: none;
+}
