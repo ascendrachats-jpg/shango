@@ -20,9 +20,9 @@ export function IdeaBlock({ block }: Props) {
         alignSelf: "stretch",
         maxWidth: "100%",
         padding: "16px",
-        border: "1px solid rgba(242, 185, 107, 0.1)",
+        border: "1px solid rgba(255, 255, 255, 0.06)",
         borderRadius: "16px",
-        background: "rgba(242, 185, 107, 0.03)",
+        background: "rgba(255, 255, 255, 0.025)",
       }}
     >
       <div

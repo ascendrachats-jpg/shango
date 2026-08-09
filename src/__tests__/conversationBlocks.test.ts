@@ -1,21 +1,19 @@
 import { describe, expect, it } from "vitest"
 import {
   createExecutionBlock,
-  createPlanBlock,
   createResultBlock,
   createErrorBlock,
+  createUserDialogueBlock,
+  createShangoDialogueBlock,
+  createIdeaBlock,
 } from "../lib/conversation"
-import { updateExecutionBlockWithSSEEvent } from "../lib/conversationBridge"
 
-describe("Experience Evolution Slice 1 — Conversation Blocks & Event Bridge", () => {
-  it("creates typed PlanBlock, ExecutionBlock, ResultBlock, and ErrorBlock instances", () => {
-    const plan = createPlanBlock(["Student workspace", "Course/task organization"], "Approach")
-    expect(plan.type).toBe("plan")
-    expect(plan.steps).toHaveLength(2)
-
+describe("Conversation Blocks — Real Block Factories", () => {
+  it("creates typed ExecutionBlock, ResultBlock, and ErrorBlock instances", () => {
     const exec = createExecutionBlock("Initializing workspace")
     expect(exec.type).toBe("execution")
     expect(exec.files).toHaveLength(0)
+    expect(exec.statusText).toBe("Initializing workspace")
 
     const res = createResultBlock("Task manager is ready", 3, "ready")
     expect(res.type).toBe("result")
@@ -26,26 +24,20 @@ describe("Experience Evolution Slice 1 — Conversation Blocks & Event Bridge", 
     expect(err.message).toBe("Build failed validation check")
   })
 
-  it("progressively aggregates raw SSE events into a single coherent ExecutionBlock", () => {
-    let block = createExecutionBlock()
+  it("creates dialogue and idea blocks with correct types and content", () => {
+    const userBlock = createUserDialogueBlock("Build me a todo app")
+    expect(userBlock.type).toBe("dialogue.user")
+    expect(userBlock.content).toBe("Build me a todo app")
 
-    block = updateExecutionBlockWithSSEEvent(block, "status", { status: "planning" })
-    expect(block.statusText).toBe("Working through the build...")
+    const shangoBlock = createShangoDialogueBlock("Here is your todo app", false)
+    expect(shangoBlock.type).toBe("dialogue.shango")
+    expect(shangoBlock.content).toBe("Here is your todo app")
+    expect(shangoBlock.pending).toBe(false)
 
-    block = updateExecutionBlockWithSSEEvent(block, "file", { file: { path: "src/App.tsx", operation: "create" } })
-    expect(block.files).toHaveLength(1)
-    expect(block.files[0].path).toBe("src/App.tsx")
+    const pendingShango = createShangoDialogueBlock("", true)
+    expect(pendingShango.pending).toBe(true)
 
-    block = updateExecutionBlockWithSSEEvent(block, "file", { file: { path: "src/styles.css", operation: "create" } })
-    expect(block.files).toHaveLength(2)
-
-    block = updateExecutionBlockWithSSEEvent(block, "status", { status: "validating" })
-    expect(block.validationStatus).toBe("validating")
-
-    block = updateExecutionBlockWithSSEEvent(block, "status", { status: "validation_passed" })
-    expect(block.validationStatus).toBe("passed")
-
-    block = updateExecutionBlockWithSSEEvent(block, "status", { status: "build_completed" })
-    expect(block.completed).toBe(true)
+    const idea = createIdeaBlock("A simple task tracker")
+    expect(idea.type).toBe("idea")
   })
 })

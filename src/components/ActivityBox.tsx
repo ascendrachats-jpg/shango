@@ -9,9 +9,10 @@ export default function ActivityBox({
   // Only show the activity box for active, factual generation states.
   if (!activityStatus) return null
   const activeStates = [
-    "request_sent",
-    "assistant_composing",
-    "applying_workspace_changes",
+    "understanding",
+    "building",
+    "validating",
+    "repairing",
   ]
   if (!activeStates.includes(activityStatus.status)) return null
 

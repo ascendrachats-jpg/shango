@@ -10,7 +10,7 @@ export default function ConfidenceCard({
   const [render, setRender] = useState(false)
 
   useEffect(() => {
-    if (activityStatus?.status === "workspace_updated") {
+    if (activityStatus?.status === "ready") {
       setRender(true)
       const t = setTimeout(() => setRender(false), 1400)
       return () => clearTimeout(t)
@@ -20,7 +20,7 @@ export default function ConfidenceCard({
 
   if (!render) return null
 
-  const meta = statusToLine(activityStatus ?? { status: "workspace_updated" })
+  const meta = statusToLine(activityStatus ?? { status: "ready" })
 
   return (
     <div
@@ -46,8 +46,7 @@ export default function ConfidenceCard({
           width: 6,
           height: 6,
           borderRadius: "50%",
-          background: "#4ade80",
-          boxShadow: "0 0 8px rgba(74,222,128,0.34)",
+          background: "rgba(255,255,255,0.7)",
         }}
       />
       <div>

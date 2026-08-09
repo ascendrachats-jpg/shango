@@ -52,15 +52,15 @@ export default function InteractiveTerminal({
       ts: new Date().toLocaleTimeString(),
       stream: "system",
       level: "info",
-      msg: "Shango Cloud Build & Runtime Terminal v2.4 initialized [Node v20.11.1, Vite v5.2.0]",
+      msg: "Shango Terminal [Node v20.11.1, Vite v5.2.0]",
       category: "general",
     },
     {
       id: "init-2",
       ts: new Date().toLocaleTimeString(),
       stream: "system",
-      level: "success",
-      msg: '✓ Real-time stdout/stderr stream attached to workspace container. Type "help" for commands.',
+      level: "info",
+      msg: 'Type "help" for available commands.',
       category: "general",
     },
   ])
