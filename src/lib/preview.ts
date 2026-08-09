@@ -315,7 +315,7 @@ export function buildArtifactPreviewDocument(
           var m = MODULES[i];
           moduleMap[m.path] = m;
           if (!m.path.startsWith("/")) moduleMap["/" + m.path] = m;
-          if (m.path.startsWith("src/")) moduleMap[m.path.replace(/^src\//, "")] = m;
+          if (m.path.startsWith("src/")) moduleMap[m.path.replace(/^src\\//, "")] = m;
         }
 
         function createIconComponent(name) {
@@ -383,7 +383,7 @@ export function buildArtifactPreviewDocument(
 
         function resolveImport(specifier, basePath) {
           if (specifier.startsWith("@/")) {
-            return normalisePath(specifier.replace(/^@\//, "src/"));
+            return normalisePath(specifier.replace(/^@\\//, "src/"));
           }
           if (specifier === "react" || specifier === "react-dom" ||
               specifier.startsWith("react/") || specifier === "lucide-react") {
@@ -535,7 +535,7 @@ export function buildArtifactPreviewDocument(
           var overlay = document.getElementById("shango-error-overlay");
           var stackEl = document.getElementById("shango-error-stack");
           if (overlay && stackEl) {
-            stackEl.textContent = (file ? file + "\n\n" : "") + (message || "Preview Error") + "\n\n" + (stack || "");
+            stackEl.textContent = (file ? file + "\\n\\n" : "") + (message || "Preview Error") + "\\n\\n" + (stack || "");
             overlay.style.display = "block";
           }
           sendRuntimeEvent({

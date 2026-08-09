@@ -235,7 +235,16 @@ async function executeProviderRequest(
 
   const fetchElapsed = ((Date.now() - fetchStart) / 1000).toFixed(1)
 
-  const responseText = await response.text()
+  let responseText: string
+  if (typeof response.text === "function") {
+    responseText = await response.text()
+  } else if (typeof response.json === "function") {
+    // Fallback for mock responses that only implement json()
+    const jsonPayload = await response.json()
+    responseText = jsonPayload ? JSON.stringify(jsonPayload) : ""
+  } else {
+    responseText = ""
+  }
   let payload: unknown = null
   try {
     payload = responseText ? JSON.parse(responseText) : null
