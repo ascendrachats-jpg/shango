@@ -119,7 +119,7 @@ function buildGeminiProviderConfig(
     },
     body: {
       contents: [{ parts: [{ text: "" }] }],
-      generationConfig: { temperature: 0.2 },
+      generationConfig: { temperature: 0.2, responseMimeType: "application/json" },
     },
     model,
   }
@@ -183,7 +183,7 @@ function buildProviderRequest(prompt: string, config: ProviderConfig) {
       ...config,
       body: {
         contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 0.2 },
+        generationConfig: { temperature: 0.2, responseMimeType: "application/json" },
       },
     }
   }

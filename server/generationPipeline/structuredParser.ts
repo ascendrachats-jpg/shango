@@ -164,6 +164,56 @@ function parseFromCodeBlocks(
   }
 }
 
+function extractBalancedJson(
+  source: string,
+): Record<string, unknown> | null {
+  const start = source.indexOf("{")
+  if (start < 0) return null
+
+  let depth = 0
+  let inString = false
+  let escape = false
+
+  for (let i = start; i < source.length; i++) {
+    const ch = source[i]
+
+    if (escape) {
+      escape = false
+      continue
+    }
+
+    if (ch === "\\") {
+      escape = true
+      continue
+    }
+
+    if (ch === '"') {
+      inString = !inString
+      continue
+    }
+
+    if (inString) continue
+
+    if (ch === "{") depth++
+    else if (ch === "}") {
+      depth--
+      if (depth === 0) {
+        const candidate = source.slice(start, i + 1)
+        try {
+          const parsed = JSON.parse(candidate)
+          if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+            return parsed as Record<string, unknown>
+          }
+        } catch {
+          return null
+        }
+      }
+    }
+  }
+
+  return null
+}
+
 function extractJsonPayload(source: string): Record<string, unknown> | null {
   const trimmed = source.trim()
   try {
@@ -174,30 +224,24 @@ function extractJsonPayload(source: string): Record<string, unknown> | null {
     // ignore
   }
 
-  const fencedMatch = trimmed.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/i)
-  if (fencedMatch?.[1]) {
-    try {
-      const parsed = JSON.parse(fencedMatch[1])
-      if (parsed && typeof parsed === "object" && !Array.isArray(parsed))
-        return parsed as Record<string, unknown>
-    } catch {
-      // ignore
-    }
+  // Extract JSON from markdown fenced code blocks (```json ... ```)
+  // Use balanced-brace extraction rather than regex to handle nested objects
+  const fenceStart = trimmed.indexOf("```")
+  if (fenceStart >= 0) {
+    const afterFence = trimmed.slice(fenceStart + 3)
+    const langEnd = afterFence.indexOf("\n")
+    const codeStart = langEnd >= 0 ? afterFence.slice(langEnd + 1) : afterFence
+    const fenceEnd = codeStart.indexOf("```")
+    const blockText = fenceEnd >= 0 ? codeStart.slice(0, fenceEnd) : codeStart
+    const extracted = extractBalancedJson(blockText)
+    if (extracted) return extracted
   }
 
-  // Find first '{' and last '}'
+  // Find first '{' and last '}' — but verify with balanced-brace check
   const firstBrace = trimmed.indexOf("{")
-  const lastBrace = trimmed.lastIndexOf("}")
-  if (firstBrace >= 0 && lastBrace > firstBrace) {
-    try {
-      const candidate = trimmed.substring(firstBrace, lastBrace + 1)
-      const parsed = JSON.parse(candidate)
-      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
-        return parsed as Record<string, unknown>
-      }
-    } catch {
-      // ignore
-    }
+  if (firstBrace >= 0) {
+    const extracted = extractBalancedJson(trimmed.slice(firstBrace))
+    if (extracted) return extracted
   }
 
   return null
