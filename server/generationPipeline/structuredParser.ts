@@ -221,7 +221,7 @@ function extractJsonPayload(source: string): Record<string, unknown> | null {
     if (parsed && typeof parsed === "object" && !Array.isArray(parsed))
       return parsed as Record<string, unknown>
   } catch {
-    // ignore
+    // ignore — will try more tolerant approaches below
   }
 
   // Extract JSON from markdown fenced code blocks (```json ... ```)
@@ -244,7 +244,223 @@ function extractJsonPayload(source: string): Record<string, unknown> | null {
     if (extracted) return extracted
   }
 
+  // Fallback: tolerant JSON parsing for malformed LLM responses.
+  // LLMs (especially Gemini) sometimes produce JSON with:
+  //   1. Raw control characters (newlines, tabs) inside string values
+  //   2. Unescaped double quotes inside string values (from JSX/TSX code)
+  // Standard JSON.parse and extractBalancedJson both fail on these.
+  // The tolerant parser uses a look-ahead heuristic to distinguish
+  // string-terminating quotes from embedded quotes.
+  if (firstBrace >= 0) {
+    const tolerantResult = tolerantJsonParse(trimmed.slice(firstBrace))
+    if (tolerantResult) return tolerantResult
+  }
+
   return null
+}
+
+/**
+ * Tolerant JSON parser for malformed LLM responses.
+ *
+ * Handles two common malformations:
+ * 1. Raw control characters (newlines, tabs) inside JSON string values
+ *    — these are kept as-is rather than causing a parse error.
+ * 2. Unescaped double quotes inside JSON string values (common in
+ *    generated TSX/JSX code like className="...") — a look-ahead
+ *    heuristic determines whether a " is a string terminator or an
+ *    embedded quote: if the next non-whitespace character is ',', '}',
+ *    or ']', the quote is treated as a terminator; otherwise it is
+ *    kept as a literal character inside the string.
+ *
+ * This is a last-resort fallback used only when JSON.parse and
+ * extractBalancedJson have both failed.
+ */
+function tolerantJsonParse(source: string): Record<string, unknown> | null {
+  try {
+    const result = parseTolerantValue(source, 0)
+    if (
+      result &&
+      typeof result.value === "object" &&
+      !Array.isArray(result.value)
+    ) {
+      return result.value as Record<string, unknown>
+    }
+  } catch {
+    // ignore — the caller will fall through to other strategies
+  }
+  return null
+}
+
+interface TolerantParseResult {
+  value: unknown
+  pos: number
+}
+
+function parseTolerantValue(
+  source: string,
+  start: number,
+): TolerantParseResult {
+  let pos = skipWhitespace(source, start)
+  const ch = source[pos]
+
+  if (ch === "{") return parseTolerantObject(source, pos)
+  if (ch === "[") return parseTolerantArray(source, pos)
+  if (ch === '"') return parseTolerantString(source, pos)
+  if (ch === "t" || ch === "f") return parseTolerantBoolean(source, pos)
+  if (ch === "n") return parseTolerantNull(source, pos)
+  if (ch === "-" || (ch >= "0" && ch <= "9"))
+    return parseTolerantNumber(source, pos)
+
+  throw new Error(`Unexpected character "${ch}" at position ${pos}`)
+}
+
+function skipWhitespace(source: string, pos: number): number {
+  while (pos < source.length && /\s/.test(source[pos])) pos++
+  return pos
+}
+
+function parseTolerantObject(
+  source: string,
+  start: number,
+): TolerantParseResult {
+  let pos = start + 1 // skip '{'
+  const obj: Record<string, unknown> = {}
+
+  while (pos < source.length) {
+    pos = skipWhitespace(source, pos)
+    if (source[pos] === "}") return { value: obj, pos: pos + 1 }
+    if (source[pos] === ",") {
+      pos++
+      continue
+    }
+
+    // Parse key (must be a string)
+    if (source[pos] !== '"') throw new Error(`Expected key at position ${pos}`)
+    const keyResult = parseTolerantString(source, pos)
+    const key = keyResult.value as string
+    pos = keyResult.pos
+
+    pos = skipWhitespace(source, pos)
+    if (source[pos] !== ":") throw new Error(`Expected ':' at position ${pos}`)
+    pos++
+
+    const valueResult = parseTolerantValue(source, pos)
+    obj[key] = valueResult.value
+    pos = valueResult.pos
+  }
+
+  throw new Error("Unterminated object")
+}
+
+function parseTolerantArray(
+  source: string,
+  start: number,
+): TolerantParseResult {
+  let pos = start + 1 // skip '['
+  const arr: unknown[] = []
+
+  while (pos < source.length) {
+    pos = skipWhitespace(source, pos)
+    if (source[pos] === "]") return { value: arr, pos: pos + 1 }
+    if (source[pos] === ",") {
+      pos++
+      continue
+    }
+
+    const valueResult = parseTolerantValue(source, pos)
+    arr.push(valueResult.value)
+    pos = valueResult.pos
+  }
+
+  throw new Error("Unterminated array")
+}
+
+function parseTolerantString(
+  source: string,
+  start: number,
+): TolerantParseResult {
+  let pos = start + 1 // skip opening '"'
+  let value = ""
+
+  while (pos < source.length) {
+    const ch = source[pos]
+
+    if (ch === "\\") {
+      // Escape sequence
+      const next = source[pos + 1]
+      if (next === "n") value += "\n"
+      else if (next === "r") value += "\r"
+      else if (next === "t") value += "\t"
+      else if (next === '"') value += '"'
+      else if (next === "\\") value += "\\"
+      else if (next === "/") value += "/"
+      else if (next === "b") value += "\b"
+      else if (next === "f") value += "\f"
+      else if (next === "u") {
+        const hex = source.slice(pos + 2, pos + 6)
+        value += String.fromCharCode(parseInt(hex, 16))
+        pos += 6
+        continue
+      } else value += next
+      pos += 2
+      continue
+    }
+
+    if (ch === '"') {
+      // Look-ahead heuristic: is this the end of the string or an
+      // unescaped quote embedded in the value (e.g. JSX attribute)?
+      let lookAhead = pos + 1
+      while (lookAhead < source.length && /\s/.test(source[lookAhead]))
+        lookAhead++
+      if (
+        source[lookAhead] === "," ||
+        source[lookAhead] === "}" ||
+        source[lookAhead] === "]" ||
+        source[lookAhead] === ":"
+      ) {
+        return { value, pos: pos + 1 } // end of string
+      }
+      // Embedded unescaped quote — keep it as a literal character
+      value += '"'
+      pos++
+      continue
+    }
+
+    // Raw control character inside string — keep it as-is
+    value += ch
+    pos++
+  }
+
+  throw new Error("Unterminated string")
+}
+
+function parseTolerantNumber(
+  source: string,
+  start: number,
+): TolerantParseResult {
+  let pos = start
+  if (source[pos] === "-") pos++
+  while (pos < source.length && /[0-9.eE+\-]/.test(source[pos])) pos++
+  return { value: parseFloat(source.slice(start, pos)), pos }
+}
+
+function parseTolerantBoolean(
+  source: string,
+  start: number,
+): TolerantParseResult {
+  if (source.startsWith("true", start))
+    return { value: true, pos: start + 4 }
+  if (source.startsWith("false", start))
+    return { value: false, pos: start + 5 }
+  throw new Error(`Invalid boolean at position ${start}`)
+}
+
+function parseTolerantNull(
+  source: string,
+  start: number,
+): TolerantParseResult {
+  if (source.startsWith("null", start)) return { value: null, pos: start + 4 }
+  throw new Error(`Invalid null at position ${start}`)
 }
 
 function parseJsonResponsePayload(

@@ -1,0 +1,1543 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+  <div id="root"></div>
+  <script>
+    var __modules = {
+'src/types.ts': function(module, exports, __require) {
+
+
+
+
+
+
+
+},
+'src/data.ts': function(module, exports, __require) {
+// unresolved: ./types
+
+module.exports.MENU_ITEMS= [
+  {
+    id,
+    name,
+    description,
+    price: 5.75,
+    category,
+    image,
+    tags: ['Best Seller', 'Floral', 'Oat Milk'],
+    calories: 210,
+    customizable: true
+  },
+  {
+    id,
+    name,
+    description,
+    price: 5.25,
+    category,
+    image,
+    tags: ['Smooth', 'Vanilla'],
+    calories: 180,
+    customizable: true
+  },
+  {
+    id,
+    name,
+    description,
+    price: 6.00,
+    category,
+    image,
+    tags: ['Refreshing', 'Citrus'],
+    calories: 90,
+    customizable: false
+  },
+  {
+    id,
+    name,
+    description,
+    price: 6.50,
+    category,
+    image,
+    tags: ['Spiced', 'Nutty', 'Iced'],
+    calories: 240,
+    customizable: true
+  },
+  {
+    id,
+    name,
+    description,
+    price: 4.25,
+    category,
+    image,
+    tags: ['Strong', 'Classic'],
+    calories: 80,
+    customizable: true
+  },
+  {
+    id,
+    name,
+    description,
+    price: 6.25,
+    category,
+    image,
+    tags: ['Single Origin', 'Clean'],
+    calories: 5,
+    customizable: false
+  },
+  {
+    id,
+    name,
+    description,
+    price: 4.95,
+    category,
+    image,
+    tags: ['Freshly Baked', 'Sweet'],
+    calories: 380,
+    customizable: false
+  },
+  {
+    id,
+    name,
+    description,
+    price: 9.50,
+    category,
+    image,
+    tags: ['Savory', 'Healthy'],
+    calories: 310,
+    customizable: false
+  }
+];
+
+module.exports.BREWING_METHODS= [
+  {
+    id,
+    name,
+    description,
+    temp,
+    time,
+    ratio,
+    iconName,
+    image: 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=400&q=80'
+  },
+  {
+    id,
+    name,
+    description,
+    temp,
+    time,
+    ratio,
+    iconName,
+    image: 'https://images.unsplash.com/photo-151097252790b-af4f90267301?auto=format&fit=crop&w=400&q=80'
+  },
+  {
+    id,
+    name,
+    description,
+    temp,
+    time,
+    ratio,
+    iconName,
+    image: 'https://images.unsplash.com/photo-1519082274514-18af0d7dfd5f?auto=format&fit=crop&w=400&q=80'
+  }
+];
+
+module.exports.TESTIMONIALS= [
+  {
+    id,
+    name,
+    role,
+    comment,
+    rating: 5,
+    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=120&h=120&q=80'
+  },
+  {
+    id,
+    name,
+    role,
+    comment,
+    rating: 5,
+    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=120&h=120&q=80'
+  },
+  {
+    id,
+    name,
+    role,
+    comment,
+    rating: 5,
+    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=120&h=120&q=80'
+  }
+];
+},
+'src/components/Navbar.tsx': function(module, exports, __require) {
+
+const ShoppingBag = (props) => React.createElement('span', {...props, 'data-icon': 'ShoppingBag'}, 'ShoppingBag');
+const Coffee = (props) => React.createElement('span', {...props, 'data-icon': 'Coffee'}, 'Coffee');
+const Menu = (props) => React.createElement('span', {...props, 'data-icon': 'Menu'}, 'Menu');
+const X = (props) => React.createElement('span', {...props, 'data-icon': 'X'}, 'X');
+const Phone = (props) => React.createElement('span', {...props, 'data-icon': 'Phone'}, 'Phone');
+const Clock = (props) => React.createElement('span', {...props, 'data-icon': 'Clock'}, 'Clock');
+const MapPin = (props) => React.createElement('span', {...props, 'data-icon': 'MapPin'}, 'MapPin');
+const __mod_src_components_Navbar_tsx = __require('src/types.ts');const { CartItem } = __mod_src_components_Navbar_tsx;
+
+
+
+module.exports.default = function Navbar({ cart, onCartOpen, onNavigate }) {
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+
+  const handleNavClick = (id) => {
+    onNavigate(id);
+    setIsMobileMenuOpen(false);
+  };
+
+  return (
+    <>
+      {/* Top Utility Bar */}
+      <div className="bg-stone-950 text-stone-400 text-xs py-2 px-4 border-b border-stone-800 hidden md:block">
+        <div className="max-w-7xl mx-auto flex justify-between items-center">
+          <div className="flex items-center space-x-6">
+            <span className="flex items-center gap-1.5">
+              <Clock className="w-3.5 h-3.5 text-amber-500" />
+              Mon - Sun: 7:00 AM - 8:00 PM
+            </span>
+            <span className="flex items-center gap-1.5">
+              <MapPin className="w-3.5 h-3.5 text-amber-500" />
+              452 Brewmaster Way, Seattle, WA
+            </span>
+          </div>
+          <div className="flex items-center space-x-4">
+            <span className="flex items-center gap-1.5">
+              <Phone className="w-3.5 h-3.5 text-amber-500" />
+              (206) 555-0192
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Header */}
+      <header
+        className={`sticky top-0 z-40 transition-all duration-300 ${
+          isScrolled
+            ? 'bg-stone-900/95 backdrop-blur-md shadow-lg border-b border-stone-800 py-3'
+            : 'bg-stone-900/80 backdrop-blur-sm border-b border-stone-800/50 py-5'
+        }`}
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between">
+            {/* Logo */}
+            <button
+              onClick={() => handleNavClick('hero')}
+              className="flex items-center space-x-2.5 group focus:outline-none"
+            >
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-amber-700 flex items-center justify-center shadow-md shadow-amber-900/20 group-hover:scale-105 transition-transform">
+                <Coffee className="w-5.5 h-5.5 text-stone-950 stroke-[2.5]" />
+              </div>
+              <div className="text-left">
+                <span className="block text-lg font-bold text-stone-100 tracking-tight leading-none">
+                  Bean & Brew
+                </span>
+                <span className="text-[10px] text-amber-500 tracking-widest uppercase font-semibold">
+                  Artisanal Roasters
+                </span>
+              </div>
+            </button>
+
+            {/* Desktop Navigation */}
+            <nav className="hidden md:flex items-center space-x-8">
+              {['menu', 'brewing', 'about', 'contact'].map((item) => (
+                <button
+                  key={item}
+                  onClick={() => handleNavClick(item)}
+                  className="text-sm font-medium text-stone-300 hover:text-amber-400 transition-colors capitalize relative py-1 group"
+                >
+                  {item}
+                  <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-amber-500 transition-all duration-300 group-hover:w-full" />
+                </button>
+              ))}
+            </nav>
+
+            {/* Actions */}
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={onCartOpen}
+                className="relative p-2.5 rounded-xl bg-stone-800/80 hover:bg-stone-800 text-stone-200 hover:text-amber-400 border border-stone-700/50 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-amber-500/40"
+                aria-label="Open Cart"
+              >
+                <ShoppingBag className="w-5 h-5" />
+                {cartCount > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 bg-amber-500 text-stone-950 text-xs font-bold w-5.5 h-5.5 rounded-full flex items-center justify-center animate-pulse border-2 border-stone-900">
+                    {cartCount}
+                  </span>
+                )}
+              </button>
+
+              <button
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="md:hidden p-2.5 rounded-xl bg-stone-800/80 text-stone-200 hover:text-amber-400 border border-stone-700/50 transition-colors focus:outline-none"
+              >
+                {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Mobile Menu */}
+        {isMobileMenuOpen && (
+          <div className="md:hidden absolute top-full left-0 w-full bg-stone-900 border-b border-stone-800 shadow-xl px-4 py-6 space-y-4 animate-in slide-in-from-top duration-200">
+            <div className="grid grid-cols-2 gap-3">
+              {['menu', 'brewing', 'about', 'contact'].map((item) => (
+                <button
+                  key={item}
+                  onClick={() => handleNavClick(item)}
+                  className="flex items-center justify-center py-3 px-4 rounded-xl bg-stone-800/50 text-stone-200 hover:bg-stone-800 hover:text-amber-400 transition-all text-sm font-medium capitalize"
+                >
+                  {item}
+                </button>
+              ))}
+            </div>
+            <div className="pt-4 border-t border-stone-800 text-xs text-stone-400 space-y-2">
+              <p className="flex items-center gap-2">
+                <Clock className="w-4 h-4 text-amber-500" /> Mon - Sun: 7:00 AM - 8:00 PM
+              </p>
+              <p className="flex items-center gap-2">
+                <MapPin className="w-4 h-4 text-amber-500" /> 452 Brewmaster Way, Seattle, WA
+              </p>
+            </div>
+          </div>
+        )}
+      </header>
+    </>
+  );
+}
+
+},
+'src/components/Hero.tsx': function(module, exports, __require) {
+
+const ArrowRight = (props) => React.createElement('span', {...props, 'data-icon': 'ArrowRight'}, 'ArrowRight');
+const Star = (props) => React.createElement('span', {...props, 'data-icon': 'Star'}, 'Star');
+const ShieldCheck = (props) => React.createElement('span', {...props, 'data-icon': 'ShieldCheck'}, 'ShieldCheck');
+const Award = (props) => React.createElement('span', {...props, 'data-icon': 'Award'}, 'Award');
+const Coffee = (props) => React.createElement('span', {...props, 'data-icon': 'Coffee'}, 'Coffee');
+
+
+
+module.exports.default = function Hero({ onExploreMenu }) {
+  return (
+    <section id="hero" className="relative bg-stone-950 overflow-hidden pt-8 pb-20 lg:pt-16 lg:pb-28">
+      {/* Background Decorative Elements */}
+      <div className="absolute inset-0 opacity-30 pointer-events-none">
+        <div className="absolute top-1/4 left-1/10 w-96 h-96 bg-amber-600/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-1/4 right-1/10 w-96 h-96 bg-amber-900/20 rounded-full blur-3xl" />
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div className="grid lg:grid-cols-12 gap-12 items-center">
+          {/* Left Column: Text Content */}
+          <div className="lg:col-span-7 text-left space-y-6">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-semibold tracking-wide uppercase">
+              <Star className="w-3.5 h-3.5 fill-amber-400" />
+              Seattle's Top-Rated Specialty Roastery
+            </div>
+
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-stone-100 tracking-tight leading-tight">
+              Crafting Moments, <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600">
+                One Perfect Cup
+              </span>{' '}
+              at a Time
+            </h1>
+
+            <p className="text-stone-400 text-base sm:text-lg max-w-xl leading-relaxed">
+              Welcome to Bean & Brew, where passion meets precision. We source single-origin, organic beans directly from sustainable micro-lots and roast them in-house daily for an unparalleled flavor experience.
+            </p>
+
+            {/* CTA Buttons */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 pt-2">
+              <button
+                onClick={onExploreMenu}
+                className="flex items-center justify-center gap-2 px-8 py-4 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-stone-950 font-bold shadow-lg shadow-amber-500/10 hover:shadow-amber-500/20 transition-all duration-200 group transform hover:-translate-y-0.5"
+              >
+                Explore Our Menu
+                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              </button>
+              <a
+                href="#brewing"
+                className="flex items-center justify-center gap-2 px-8 py-4 rounded-xl bg-stone-900 hover:bg-stone-800 text-stone-200 border border-stone-800 hover:border-stone-700 font-semibold transition-all duration-200"
+              >
+                Our Brewing Philosophy
+              </a>
+            </div>
+
+            {/* Trust Badges */}
+            <div className="grid grid-cols-3 gap-4 pt-8 border-t border-stone-900">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-lg bg-stone-900 text-amber-500">
+                  <ShieldCheck className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-xs text-stone-400 leading-none">100% Organic</p>
+                  <p className="text-sm font-bold text-stone-200 mt-1">Direct Trade</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-lg bg-stone-900 text-amber-500">
+                  <Award className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-xs text-stone-400 leading-none">Award Winning</p>
+                  <p className="text-sm font-bold text-stone-200 mt-1">Master Roasters</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-lg bg-stone-900 text-amber-500">
+                  <Coffee className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-xs text-stone-400 leading-none">Freshly Roasted</p>
+                  <p className="text-sm font-bold text-stone-200 mt-1">Daily Batches</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column: Hero Image & Interactive Card */}
+          <div className="lg:col-span-5 relative">
+            <div className="relative mx-auto max-w-md lg:max-w-none">
+              {/* Main Image Frame */}
+              <div className="aspect-square rounded-3xl overflow-hidden border-4 border-stone-900 shadow-2xl relative group">
+                <img
+                  src="https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=800&q=80"
+                  alt="Barista pouring latte art"
+                  className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-stone-950 via-transparent to-transparent opacity-60" />
+              </div>
+
+              {/* Floating Promo Card */}
+              <div className="absolute -bottom-6 -left-6 bg-stone-900/95 backdrop-blur-md border border-stone-800 p-5 rounded-2xl shadow-xl max-w-xs flex items-start gap-4 animate-bounce-slow">
+                <div className="w-12 h-12 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-500 shrink-0">
+                  <Coffee className="w-6 h-6" />
+                </div>
+                <div>
+                  <span className="text-[10px] font-bold text-amber-500 uppercase tracking-wider">Today's Special</span>
+                  <h4 className="text-sm font-bold text-stone-100 mt-0.5">Honey Lavender Latte</h4>
+                  <p className="text-xs text-stone-400 mt-1">Get 15% off your first order with code <span className="text-amber-400 font-mono font-bold">BREW15</span></p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+},
+'src/components/MenuSection.tsx': function(module, exports, __require) {
+
+const Search = (props) => React.createElement('span', {...props, 'data-icon': 'Search'}, 'Search');
+const Filter = (props) => React.createElement('span', {...props, 'data-icon': 'Filter'}, 'Filter');
+const Plus = (props) => React.createElement('span', {...props, 'data-icon': 'Plus'}, 'Plus');
+const Flame = (props) => React.createElement('span', {...props, 'data-icon': 'Flame'}, 'Flame');
+const Snowflake = (props) => React.createElement('span', {...props, 'data-icon': 'Snowflake'}, 'Snowflake');
+const Croissant = (props) => React.createElement('span', {...props, 'data-icon': 'Croissant'}, 'Croissant');
+const Sparkles = (props) => React.createElement('span', {...props, 'data-icon': 'Sparkles'}, 'Sparkles');
+const __mod_src_components_MenuSection_tsx = __require('src/types.ts');const { MenuItem } = __mod_src_components_MenuSection_tsx;
+const __mod_src_components_MenuSection_tsx = __require('src/data.ts');const { MENU_ITEMS } = __mod_src_components_MenuSection_tsx;
+
+
+
+type CategoryFilter = 'all' | 'hot' | 'cold' | 'bakery' | 'signature';
+
+module.exports.default = function MenuSection({ onSelectItem }) {
+  const [activeCategory, setActiveCategory] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const categories: { value; label; icon: React.ReactNode }[] = [
+    { value, label, icon: <Sparkles className="w-4 h-4" /> },
+    { value, label, icon: <Flame className="w-4 h-4" /> },
+    { value, label, icon: <Snowflake className="w-4 h-4" /> },
+    { value, label, icon: <Croissant className="w-4 h-4" /> },
+    { value, label, icon: <Sparkles className="w-4 h-4" /> },
+  ];
+
+  const filteredItems = useMemo(() => {
+    return MENU_ITEMS.filter((item) => {
+      const matchesCategory = activeCategory === 'all' || item.category === activeCategory;
+      const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                            item.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                            item.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
+      return matchesCategory && matchesSearch;
+    });
+  }, [activeCategory, searchQuery]);
+
+  return (
+    <section id="menu" className="py-20 bg-stone-900 border-t border-stone-800">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        {/* Section Header */}
+        <div className="text-center max-w-3xl mx-auto mb-12 space-y-4">
+          <span className="text-xs font-bold text-amber-500 uppercase tracking-widest">Curated Selection</span>
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-stone-100 tracking-tight">
+            Explore Our Artisanal Menu
+          </h2>
+          <p className="text-stone-400">
+            Every beverage is crafted with freshly roasted beans, precise water temperatures, and organic ingredients. Select an item to customize your perfect cup.
+          </p>
+        </div>
+
+        {/* Search & Filter Controls */}
+        <div className="flex flex-col md:flex-row gap-4 items-center justify-between mb-10 pb-6 border-b border-stone-800">
+          {/* Category Tabs */}
+          <div className="flex items-center space-x-2 overflow-x-auto w-full md:w-auto pb-2 md:pb-0 scrollbar-none">
+            {categories.map((cat) => (
+              <button
+                key={cat.value}
+                onClick={() => setActiveCategory(cat.value)}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all duration-200 ${
+                  activeCategory === cat.value
+                    ? 'bg-amber-500 text-stone-950 shadow-lg shadow-amber-500/10 font-bold'
+                    : 'bg-stone-800/60 text-stone-300 hover:bg-stone-800 hover:text-stone-100 border border-stone-700/40'
+                }`}
+              >
+                {cat.icon}
+                {cat.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Search Bar */}
+          <div className="relative w-full md:w-80">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-stone-400" />
+            <input
+              type="text"
+              placeholder="Search menu..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-stone-800/60 border border-stone-700/50 text-stone-200 placeholder-stone-500 focus:outline-none focus:ring-2 focus:ring-amber-500/40 focus:border-amber-500/50 transition-all text-sm"
+            />
+          </div>
+        </div>
+
+        {/* Menu Grid */}
+        {filteredItems.length > 0 ? (
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {filteredItems.map((item) => (
+              <div
+                key={item.id}
+                className="group bg-stone-950 rounded-2xl overflow-hidden border border-stone-800/80 hover:border-amber-500/30 transition-all duration-300 flex flex-col h-full shadow-md hover:shadow-xl hover:shadow-amber-950/5"
+              >
+                {/* Image Container */}
+                <div className="relative aspect-[4/3] overflow-hidden bg-stone-900">
+                  <img
+                    src={item.image}
+                    alt={item.name}
+                    className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
+                  />
+                  <div className="absolute top-3 right-3 flex flex-wrap gap-1 justify-end">
+                    {item.tags.map((tag) => (
+                      <span
+                        key={tag}
+                        className="px-2 py-0.5 rounded-md bg-stone-900/90 backdrop-blur-md text-[10px] font-bold text-amber-400 border border-amber-500/20"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Content */}
+                <div className="p-5 flex flex-col flex-grow justify-between">
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-start gap-2">
+                      <h3 className="font-bold text-stone-100 group-hover:text-amber-400 transition-colors line-clamp-1">
+                        {item.name}
+                      </h3>
+                      <span className="font-mono font-bold text-amber-400 shrink-0">
+                        ${item.price.toFixed(2)}
+                      </span>
+                    </div>
+                    <p className="text-xs text-stone-400 line-clamp-2 leading-relaxed">
+                      {item.description}
+                    </p>
+                  </div>
+
+                  {/* Footer Action */}
+                  <div className="pt-4 mt-4 border-t border-stone-900 flex items-center justify-between">
+                    <span className="text-[10px] text-stone-500 font-medium">
+                      {item.calories} kcal
+                    </span>
+                    <button
+                      onClick={() => onSelectItem(item)}
+                      className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-stone-900 hover:bg-amber-500 text-stone-300 hover:text-stone-950 border border-stone-800 hover:border-amber-500 text-xs font-bold transition-all duration-200"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      {item.customizable ? 'Customize' : 'Add to Cart'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-16 bg-stone-950 rounded-2xl border border-stone-800">
+            <p className="text-stone-400 text-lg">No menu items found matching your criteria.</p>
+            <button
+              onClick={() => { setActiveCategory('all'); setSearchQuery(''); }}
+              className="mt-4 px-5 py-2 rounded-xl bg-stone-900 hover:bg-stone-800 text-amber-400 text-sm font-semibold border border-stone-800 transition-colors"
+            >
+              Reset Filters
+            </button>
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+},
+'src/components/ItemModal.tsx': function(module, exports, __require) {
+
+const X = (props) => React.createElement('span', {...props, 'data-icon': 'X'}, 'X');
+const ShoppingBag = (props) => React.createElement('span', {...props, 'data-icon': 'ShoppingBag'}, 'ShoppingBag');
+const Info = (props) => React.createElement('span', {...props, 'data-icon': 'Info'}, 'Info');
+const __mod_src_components_ItemModal_tsx = __require('src/types.ts');const { MenuItem, CartItem } = __mod_src_components_ItemModal_tsx;
+
+
+
+module.exports.default = function ItemModal({ item, onClose, onAddToCart }) {
+  const [size, setSize] = useState<'Small' | 'Medium' | 'Large'>('Medium');
+  const [milk, setMilk] = useState<'Whole' | 'Oat' | 'Almond' | 'None'>('Whole');
+  const [sweetness, setSweetness] = useState<'None' | 'Less' | 'Regular' | 'Extra'>('Regular');
+  const [quantity, setQuantity] = useState(1);
+
+  useEffect(() => {
+    if (item) {
+      setSize('Medium');
+      setMilk(item.category === 'bakery' ? 'None' );
+      setSweetness('Regular');
+      setQuantity(1);
+    }
+  }, [item]);
+
+  if (!item) return null;
+
+  // Calculate custom price based on selections
+  const getPriceAdjustment = () => {
+    let extra = 0;
+    if (size === 'Small') extra -= 0.5;
+    if (size === 'Large') extra += 0.75;
+    if (milk === 'Oat' || milk === 'Almond') extra += 0.65;
+    return extra;
+  };
+
+  const unitPrice = Math.max(1.5, item.price + getPriceAdjustment());
+  const totalPrice = unitPrice * quantity;
+
+  const handleAdd = () => {
+    const cartItem= {
+      id: `${item.id}-${size}-${milk}-${sweetness}-${Date.now()}`,
+      menuItem,
+      selectedSize,
+      selectedMilk,
+      sweetnessLevel,
+      customPrice,
+    };
+    onAddToCart(cartItem);
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-950/80 backdrop-blur-sm animate-fade-in">
+      <div className="bg-stone-900 border border-stone-800 rounded-2xl max-w-lg w-full overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+        {/* Header Image */}
+        <div className="relative h-48 sm:h-56 bg-stone-950 shrink-0">
+          <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-t from-stone-900 to-transparent" />
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 p-2 rounded-full bg-stone-950/80 hover:bg-stone-950 text-stone-300 hover:text-stone-100 transition-colors border border-stone-800"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Content Area */}
+        <div className="p-6 overflow-y-auto space-y-6 flex-grow">
+          <div>
+            <div className="flex justify-between items-start gap-4">
+              <h3 className="text-xl font-bold text-stone-100">{item.name}</h3>
+              <span className="text-xl font-mono font-bold text-amber-400">
+                ${unitPrice.toFixed(2)}
+              </span>
+            </div>
+            <p className="text-sm text-stone-400 mt-2 leading-relaxed">{item.description}</p>
+          </div>
+
+          {item.customizable && (
+            <div className="space-y-5 pt-4 border-t border-stone-800">
+              {/* Size Selection */}
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-stone-400 uppercase tracking-wider">Select Size</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {(['Small', 'Medium', 'Large']).map((s) => (
+                    <button
+                      key={s}
+                      onClick={() => setSize(s)}
+                      className={`py-2 px-3 rounded-xl text-xs font-semibold border transition-all ${
+                        size === s
+                          ? 'bg-amber-500/10 border-amber-500 text-amber-400'
+                          : 'bg-stone-800/40 border-stone-800 text-stone-300 hover:bg-stone-800'
+                      }`}
+                    >
+                      {s}
+                      <span className="block text-[10px] text-stone-500 font-normal mt-0.5">
+                        {s === 'Small' ? '-$0.50' === 'Large' ? '+$0.75' : 'Standard'}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Milk Selection */}
+              {item.category !== 'bakery' && (
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-stone-400 uppercase tracking-wider">Milk Option</label>
+                  <div className="grid grid-cols-4 gap-2">
+                    {(['Whole', 'Oat', 'Almond', 'None']).map((m) => (
+                      <button
+                        key={m}
+                        onClick={() => setMilk(m)}
+                        className={`py-2 px-1 rounded-xl text-xs font-semibold border transition-all ${
+                          milk === m
+                            ? 'bg-amber-500/10 border-amber-500 text-amber-400'
+                            : 'bg-stone-800/40 border-stone-800 text-stone-300 hover:bg-stone-800'
+                        }`}
+                      >
+                        {m}
+                        <span className="block text-[9px] text-stone-500 font-normal mt-0.5">
+                          {m === 'Oat' || m === 'Almond' ? '+$0.65' : 'Free'}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Sweetness Selection */}
+              {item.category !== 'bakery' && (
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-stone-400 uppercase tracking-wider">Sweetness Level</label>
+                  <div className="grid grid-cols-4 gap-2">
+                    {(['None', 'Less', 'Regular', 'Extra']).map((sw) => (
+                      <button
+                        key={sw}
+                        onClick={() => setSweetness(sw)}
+                        className={`py-2 px-1 rounded-xl text-xs font-semibold border transition-all ${
+                          sweetness === sw
+                            ? 'bg-amber-500/10 border-amber-500 text-amber-400'
+                            : 'bg-stone-800/40 border-stone-800 text-stone-300 hover:bg-stone-800'
+                        }`}
+                      >
+                        {sw}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Footer Action */}
+        <div className="p-6 bg-stone-950 border-t border-stone-800 shrink-0 flex items-center justify-between gap-4">
+          {/* Quantity Selector */}
+          <div className="flex items-center bg-stone-900 border border-stone-800 rounded-xl p-1">
+            <button
+              onClick={() => setQuantity(Math.max(1, quantity - 1))}
+              className="w-8 h-8 rounded-lg flex items-center justify-center text-stone-400 hover:text-stone-200 hover:bg-stone-800 transition-colors font-bold"
+            >
+              -
+            </button>
+            <span className="w-10 text-center text-sm font-bold text-stone-200">{quantity}</span>
+            <button
+              onClick={() => setQuantity(quantity + 1)}
+              className="w-8 h-8 rounded-lg flex items-center justify-center text-stone-400 hover:text-stone-200 hover:bg-stone-800 transition-colors font-bold"
+            >
+              +
+            </button>
+          </div>
+
+          {/* Add Button */}
+          <button
+            onClick={handleAdd}
+            className="flex-grow flex items-center justify-center gap-2 py-3 px-6 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-stone-950 font-bold shadow-lg shadow-amber-500/10 transition-all duration-200"
+          >
+            <ShoppingBag className="w-4 h-4" />
+            Add to Order • ${totalPrice.toFixed(2)}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+},
+'src/components/CartDrawer.tsx': function(module, exports, __require) {
+
+const X = (props) => React.createElement('span', {...props, 'data-icon': 'X'}, 'X');
+const Trash2 = (props) => React.createElement('span', {...props, 'data-icon': 'Trash2'}, 'Trash2');
+const ShoppingBag = (props) => React.createElement('span', {...props, 'data-icon': 'ShoppingBag'}, 'ShoppingBag');
+const Tag = (props) => React.createElement('span', {...props, 'data-icon': 'Tag'}, 'Tag');
+const CheckCircle2 = (props) => React.createElement('span', {...props, 'data-icon': 'CheckCircle2'}, 'CheckCircle2');
+const __mod_src_components_CartDrawer_tsx = __require('src/types.ts');const { CartItem } = __mod_src_components_CartDrawer_tsx;
+
+
+
+module.exports.default = function CartDrawer({
+  isOpen,
+  onClose,
+  cart,
+  onUpdateQuantity,
+  onRemoveItem,
+  onCheckout,
+}) {
+  const [promoCode, setPromoCode] = useState('');
+  const [appliedDiscount, setAppliedDiscount] = useState(0);
+  const [promoError, setPromoError] = useState('');
+  const [promoSuccess, setPromoSuccess] = useState('');
+
+  if (!isOpen) return null;
+
+  const subtotal = cart.reduce((sum, item) => sum + item.customPrice * item.quantity, 0);
+  const discountAmount = subtotal * appliedDiscount;
+  const tax = (subtotal - discountAmount) * 0.101; // Seattle tax rate
+  const total = subtotal - discountAmount + tax;
+
+  const handleApplyPromo = (e) => {
+    e.preventDefault();
+    if (promoCode.toUpperCase() === 'BREW15') {
+      setAppliedDiscount(0.15);
+      setPromoSuccess('15% discount applied successfully!');
+      setPromoError('');
+    } else {
+      setPromoError('Invalid promo code. Try BREW15');
+      setPromoSuccess('');
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex justify-end bg-stone-950/80 backdrop-blur-sm animate-fade-in">
+      <div className="w-full max-w-md bg-stone-900 border-l border-stone-800 h-full flex flex-col shadow-2xl animate-slide-in">
+        
+        {/* Header */}
+        <div className="p-6 border-b border-stone-800 flex items-center justify-between bg-stone-950">
+          <div className="flex items-center gap-2.5">
+            <ShoppingBag className="w-5 h-5 text-amber-500" />
+            <h3 className="text-lg font-bold text-stone-100">Your Order</h3>
+            <span className="px-2 py-0.5 rounded-full bg-stone-800 text-xs text-stone-400 font-semibold">
+              {cart.reduce((sum, item) => sum + item.quantity, 0)}
+            </span>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-2 rounded-xl bg-stone-900 hover:bg-stone-800 text-stone-400 hover:text-stone-200 transition-colors border border-stone-800"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Cart Items List */}
+        <div className="flex-grow overflow-y-auto p-6 space-y-4">
+          {cart.length > 0 ? (
+            cart.map((item) => (
+              <div
+                key={item.id}
+                className="flex gap-4 p-4 rounded-xl bg-stone-950 border border-stone-800/80 hover:border-stone-800 transition-all"
+              >
+                <img
+                  src={item.menuItem.image}
+                  alt={item.menuItem.name}
+                  className="w-16 h-16 rounded-lg object-cover shrink-0 bg-stone-900"
+                />
+                <div className="flex-grow min-w-0">
+                  <div className="flex justify-between items-start gap-2">
+                    <h4 className="font-bold text-stone-200 text-sm truncate">{item.menuItem.name}</h4>
+                    <span className="font-mono font-bold text-amber-400 text-sm shrink-0">
+                      ${(item.customPrice * item.quantity).toFixed(2)}
+                    </span>
+                  </div>
+                  
+                  {/* Customization Badges */}
+                  {item.menuItem.customizable && (
+                    <div className="flex flex-wrap gap-1 mt-1.5">
+                      <span className="text-[9px] bg-stone-900 text-stone-400 px-1.5 py-0.5 rounded border border-stone-800">
+                        {item.selectedSize}
+                      </span>
+                      {item.menuItem.category !== 'bakery' && (
+                        <>
+                          <span className="text-[9px] bg-stone-900 text-stone-400 px-1.5 py-0.5 rounded border border-stone-800">
+                            {item.selectedMilk} Milk
+                          </span>
+                          <span className="text-[9px] bg-stone-900 text-stone-400 px-1.5 py-0.5 rounded border border-stone-800">
+                            {item.sweetnessLevel} Sweet
+                          </span>
+                        </>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Quantity Controls & Delete */}
+                  <div className="flex items-center justify-between mt-3 pt-2 border-t border-stone-900">
+                    <div className="flex items-center bg-stone-900 rounded-lg p-0.5 border border-stone-800">
+                      <button
+                        onClick={() => onUpdateQuantity(item.id, -1)}
+                        className="w-6 h-6 rounded flex items-center justify-center text-stone-400 hover:text-stone-200 hover:bg-stone-800 transition-colors text-xs font-bold"
+                      >
+                        -
+                      </button>
+                      <span className="w-8 text-center text-xs font-bold text-stone-200">{item.quantity}</span>
+                      <button
+                        onClick={() => onUpdateQuantity(item.id, 1)}
+                        className="w-6 h-6 rounded flex items-center justify-center text-stone-400 hover:text-stone-200 hover:bg-stone-800 transition-colors text-xs font-bold"
+                      >
+                        +
+                      </button>
+                    </div>
+                    <button
+                      onClick={() => onRemoveItem(item.id)}
+                      className="p-1.5 rounded-lg text-stone-500 hover:text-red-400 hover:bg-red-500/10 transition-all"
+                      title="Remove item"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="text-center py-16 space-y-4">
+              <div className="w-16 h-16 rounded-full bg-stone-950 flex items-center justify-center text-stone-600 mx-auto">
+                <ShoppingBag className="w-8 h-8" />
+              </div>
+              <div>
+                <p className="text-stone-300 font-bold">Your cart is empty</p>
+                <p className="text-stone-500 text-xs mt-1">Add some delicious brews to get started!</p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Promo Code & Summary */}
+        {cart.length > 0 && (
+          <div className="p-6 bg-stone-950 border-t border-stone-800 space-y-4 shrink-0">
+            {/* Promo Form */}
+            <form onSubmit={handleApplyPromo} className="flex gap-2">
+              <div className="relative flex-grow">
+                <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-500" />
+                <input
+                  type="text"
+                  placeholder="Promo Code (BREW15)"
+                  value={promoCode}
+                  onChange={(e) => setPromoCode(e.target.value)}
+                  className="w-full pl-9 pr-3 py-2 rounded-xl bg-stone-900 border border-stone-800 text-stone-200 placeholder-stone-500 focus:outline-none focus:ring-1 focus:ring-amber-500/40 text-xs uppercase font-semibold"
+                />
+              </div>
+              <button
+                type="submit"
+                className="px-4 py-2 rounded-xl bg-stone-800 hover:bg-stone-700 text-amber-400 text-xs font-bold border border-stone-700 transition-colors"
+              >
+                Apply
+              </button>
+            </form>
+            {promoError && <p className="text-[11px] text-red-400 font-medium">{promoError}</p>}
+            {promoSuccess && (
+              <p className="text-[11px] text-emerald-400 font-medium flex items-center gap-1">
+                <CheckCircle2 className="w-3.5 h-3.5" /> {promoSuccess}
+              </p>
+            )}
+
+            {/* Price Breakdown */}
+            <div className="space-y-2 pt-2 border-t border-stone-900 text-xs">
+              <div className="flex justify-between text-stone-400">
+                <span>Subtotal</span>
+                <span className="font-mono">${subtotal.toFixed(2)}</span>
+              </div>
+              {appliedDiscount > 0 && (
+                <div className="flex justify-between text-emerald-400">
+                  <span>Discount (15%)</span>
+                  <span className="font-mono">-${discountAmount.toFixed(2)}</span>
+                </div>
+              )}
+              <div className="flex justify-between text-stone-400">
+                <span>Tax (10.1%)</span>
+                <span className="font-mono">${tax.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between text-stone-100 font-bold text-sm pt-2 border-t border-stone-900">
+                <span>Total</span>
+                <span className="font-mono text-amber-400">${total.toFixed(2)}</span>
+              </div>
+            </div>
+
+            {/* Checkout Button */}
+            <button
+              onClick={onCheckout}
+              className="w-full py-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-stone-950 font-bold shadow-lg shadow-amber-500/10 transition-all duration-200 mt-2"
+            >
+              Place Order • ${total.toFixed(2)}
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+},
+'src/components/BrewingShowcase.tsx': function(module, exports, __require) {
+
+const __mod_src_components_BrewingShowcase_tsx = __require('src/data.ts');const { BREWING_METHODS } = __mod_src_components_BrewingShowcase_tsx;
+const Clock = (props) => React.createElement('span', {...props, 'data-icon': 'Clock'}, 'Clock');
+const Thermometer = (props) => React.createElement('span', {...props, 'data-icon': 'Thermometer'}, 'Thermometer');
+const Scale = (props) => React.createElement('span', {...props, 'data-icon': 'Scale'}, 'Scale');
+const Coffee = (props) => React.createElement('span', {...props, 'data-icon': 'Coffee'}, 'Coffee');
+
+module.exports.default = function BrewingShowcase() {
+  const [activeMethod, setActiveMethod] = useState(BREWING_METHODS[0]);
+
+  return (
+    <section id="brewing" className="py-20 bg-stone-950 border-t border-stone-900 relative overflow-hidden">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        
+        {/* Section Header */}
+        <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
+          <span className="text-xs font-bold text-amber-500 uppercase tracking-widest">The Craft of Extraction</span>
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-stone-100 tracking-tight">
+            Our Brewing Philosophy
+          </h2>
+          <p className="text-stone-400">
+            Coffee is science, art, and patience. We calibrate our grinders daily and adjust water chemistry to bring out the absolute best flavor profile of each single-origin bean.
+          </p>
+        </div>
+
+        {/* Interactive Showcase Grid */}
+        <div className="grid lg:grid-cols-12 gap-8 items-stretch">
+          {/* Left Column: Method Selector Tabs */}
+          <div className="lg:col-span-4 flex flex-col justify-center space-y-3">
+            {BREWING_METHODS.map((method) => (
+              <button
+                key={method.id}
+                onClick={() => setActiveMethod(method)}
+                className={`p-5 rounded-2xl text-left border transition-all duration-300 flex items-center gap-4 group ${
+                  activeMethod.id === method.id
+                    ? 'bg-stone-900 border-amber-500/40 shadow-xl shadow-amber-950/10'
+                    : 'bg-stone-900/40 border-stone-800/60 hover:bg-stone-900 hover:border-stone-800'
+                }`}
+              >
+                <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
+                  activeMethod.id === method.id
+                    ? 'bg-amber-500 text-stone-950'
+                    : 'bg-stone-800 text-stone-400 group-hover:text-amber-400'
+                }`}
+                >
+                  <Coffee className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className={`font-bold text-sm transition-colors ${
+                    activeMethod.id === method.id ? 'text-amber-400' : 'text-stone-200'
+                  }`}>
+                    {method.name}
+                  </h4>
+                  <p className="text-xs text-stone-400 mt-1 line-clamp-1">{method.description}</p>
+                </div>
+              </button>
+            ))}
+          </div>
+
+          {/* Right Column: Detailed View Card */}
+          <div className="lg:col-span-8 bg-stone-900 border border-stone-800 rounded-3xl p-6 sm:p-8 flex flex-col md:flex-row gap-8 items-center">
+            {/* Method Image */}
+            <div className="w-full md:w-1/2 aspect-square rounded-2xl overflow-hidden border border-stone-800 shrink-0">
+              <img
+                src={activeMethod.image}
+                alt={activeMethod.name}
+                className="w-full h-full object-cover"
+              />
+            </div>
+
+            {/* Method Details */}
+            <div className="flex-grow space-y-6 text-left">
+              <div>
+                <span className="text-[10px] font-bold text-amber-500 uppercase tracking-wider">Active Method</span>
+                <h3 className="text-2xl font-extrabold text-stone-100 mt-1">{activeMethod.name}</h3>
+                <p className="text-sm text-stone-400 mt-3 leading-relaxed">{activeMethod.description}</p>
+              </div>
+
+              {/* Parameters Grid */}
+              <div className="grid grid-cols-3 gap-4 pt-6 border-t border-stone-800">
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-1.5 text-amber-500">
+                    <Thermometer className="w-4 h-4" />
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-stone-400">Temp</span>
+                  </div>
+                  <p className="text-sm font-bold text-stone-200">{activeMethod.temp}</p>
+                </div>
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-1.5 text-amber-500">
+                    <Clock className="w-4 h-4" />
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-stone-400">Time</span>
+                  </div>
+                  <p className="text-sm font-bold text-stone-200">{activeMethod.time}</p>
+                </div>
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-1.5 text-amber-500">
+                    <Scale className="w-4 h-4" />
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-stone-400">Ratio</span>
+                  </div>
+                  <p className="text-sm font-bold text-stone-200">{activeMethod.ratio}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+},
+'src/components/Footer.tsx': function(module, exports, __require) {
+
+const Coffee = (props) => React.createElement('span', {...props, 'data-icon': 'Coffee'}, 'Coffee');
+const Mail = (props) => React.createElement('span', {...props, 'data-icon': 'Mail'}, 'Mail');
+const Phone = (props) => React.createElement('span', {...props, 'data-icon': 'Phone'}, 'Phone');
+const MapPin = (props) => React.createElement('span', {...props, 'data-icon': 'MapPin'}, 'MapPin');
+const Clock = (props) => React.createElement('span', {...props, 'data-icon': 'Clock'}, 'Clock');
+const Send = (props) => React.createElement('span', {...props, 'data-icon': 'Send'}, 'Send');
+const CheckCircle2 = (props) => React.createElement('span', {...props, 'data-icon': 'CheckCircle2'}, 'CheckCircle2');
+
+module.exports.default = function Footer() {
+  const [email, setEmail] = useState('');
+  const [subscribed, setSubscribed] = useState(false);
+
+  const handleSubscribe = (e) => {
+    e.preventDefault();
+    if (email.trim()) {
+      setSubscribed(true);
+      setEmail('');
+      setTimeout(() => setSubscribed(false), 5000);
+    }
+  };
+
+  return (
+    <footer id="contact" className="bg-stone-950 border-t border-stone-900 pt-16 pb-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-10 pb-12 border-b border-stone-900">
+          
+          {/* Brand & Newsletter Column */}
+          <div className="md:col-span-5 space-y-6 text-left">
+            <div className="flex items-center space-x-2.5">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-amber-700 flex items-center justify-center">
+                <Coffee className="w-5.5 h-5.5 text-stone-950 stroke-[2.5]" />
+              </div>
+              <div>
+                <span className="block text-lg font-bold text-stone-100 tracking-tight leading-none">
+                  Bean & Brew
+                </span>
+                <span className="text-[10px] text-amber-500 tracking-widest uppercase font-semibold">
+                  Artisanal Roasters
+                </span>
+              </div>
+            </div>
+            <p className="text-stone-400 text-sm max-w-sm leading-relaxed">
+              Join our community of coffee lovers. Subscribe to our newsletter for exclusive brewing guides, new single-origin arrivals, and special promotions.
+            </p>
+            
+            {/* Newsletter Form */}
+            <form onSubmit={handleSubscribe} className="max-w-sm">
+              <div className="flex gap-2">
+                <div className="relative flex-grow">
+                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-stone-500" />
+                  <input
+                    type="email"
+                    required
+                    placeholder="Enter your email address"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full pl-10 pr-4 py-3 rounded-xl bg-stone-900 border border-stone-800 text-stone-200 placeholder-stone-500 focus:outline-none focus:ring-2 focus:ring-amber-500/40 text-sm"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="px-5 py-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-stone-950 font-bold transition-colors flex items-center justify-center shrink-0"
+                >
+                  <Send className="w-4 h-4" />
+                </button>
+              </div>
+              {subscribed && (
+                <p className="text-xs text-emerald-400 font-medium mt-2 flex items-center gap-1.5">
+                  <CheckCircle2 className="w-4 h-4" /> Thank you for subscribing!
+                </p>
+              )}
+            </form>
+          </div>
+
+          {/* Quick Links Column */}
+          <div className="md:col-span-3 text-left space-y-4">
+            <h4 className="text-xs font-bold text-stone-200 uppercase tracking-widest">Explore</h4>
+            <ul className="space-y-2.5 text-sm">
+              {['Our Menu', 'Brewing Guide', 'About Our Beans', 'Sustainability', 'Careers'].map((link) => (
+                <li key={link}>
+                  <a href="#" className="text-stone-400 hover:text-amber-400 transition-colors">
+                    {link}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Contact Info Column */}
+          <div className="md:col-span-4 text-left space-y-4">
+            <h4 className="text-xs font-bold text-stone-200 uppercase tracking-widest">Contact & Location</h4>
+            <div className="space-y-3.5 text-sm text-stone-400">
+              <p className="flex items-start gap-3">
+                <MapPin className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+                <span>
+                  452 Brewmaster Way, <br />
+                  Seattle, WA 98101
+                </span>
+              </p>
+              <p className="flex items-center gap-3">
+                <Phone className="w-5 h-5 text-amber-500 shrink-0" />
+                <span>(206) 555-0192</span>
+              </p>
+              <p className="flex items-start gap-3">
+                <Clock className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+                <span>
+                  Monday - Friday: 6:30 AM - 8:00 PM <br />
+                  Saturday - Sunday: 7:00 AM - 8:00 PM
+                </span>
+              </p>
+            </div>
+          </div>
+
+        </div>
+
+        {/* Bottom Copyright */}
+        <div className="pt-8 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs text-stone-500">
+          <p>© {new Date().getFullYear()} Bean & Brew Coffee Roasters. All rights reserved.</p>
+          <div className="flex space-x-6">
+            <a href="#" className="hover:text-stone-300 transition-colors">Privacy Policy</a>
+            <a href="#" className="hover:text-stone-300 transition-colors">Terms of Service</a>
+            <a href="#" className="hover:text-stone-300 transition-colors">Sitemap</a>
+          </div>
+        </div>
+      </div>
+    </footer>
+  );
+}
+
+},
+'src/App.tsx': function(module, exports, __require) {
+
+// unresolved: ./components/Navbar
+// unresolved: ./components/Hero
+// unresolved: ./components/MenuSection
+// unresolved: ./components/ItemModal
+// unresolved: ./components/CartDrawer
+// unresolved: ./components/BrewingShowcase
+// unresolved: ./components/Footer
+// unresolved: ./types
+const CheckCircle2 = (props) => React.createElement('span', {...props, 'data-icon': 'CheckCircle2'}, 'CheckCircle2');
+const X = (props) => React.createElement('span', {...props, 'data-icon': 'X'}, 'X');
+const Star = (props) => React.createElement('span', {...props, 'data-icon': 'Star'}, 'Star');
+// unresolved: ./data
+
+module.exports.default = function App() {
+  const [cart, setCart] = useState([]);
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [isCartOpen, setIsCartOpen] = useState(false);
+  const [showNotification, setShowNotification] = useState<string | null>(null);
+  const [showCheckoutSuccess, setShowCheckoutSuccess] = useState(false);
+
+  const handleAddToCart = (cartItem) => {
+    setCart((prevCart) => {
+      // Check if exact same item with same customizations already exists
+      const existingIndex = prevCart.findIndex(
+        (item) =>
+          item.menuItem.id === cartItem.menuItem.id &&
+          item.selectedSize === cartItem.selectedSize &&
+          item.selectedMilk === cartItem.selectedMilk &&
+          item.sweetnessLevel === cartItem.sweetnessLevel
+      );
+
+      if (existingIndex > -1) {
+        const updated = [...prevCart];
+        updated[existingIndex].quantity += cartItem.quantity;
+        return updated;
+      }
+      return [...prevCart, cartItem];
+    });
+
+    // Trigger notification
+    setShowNotification(`Added ${cartItem.quantity}x ${cartItem.menuItem.name} to your order!`);
+    setTimeout(() => setShowNotification(null), 4000);
+  };
+
+  const handleUpdateQuantity = (id, delta) => {
+    setCart((prevCart) =>
+      prevCart
+        .map((item) => {
+          if (item.id === id) {
+            const newQty = item.quantity + delta;
+            return { ...item, quantity: newQty };
+          }
+          return item;
+        })
+        .filter((item) => item.quantity > 0)
+    );
+  };
+
+  const handleRemoveItem = (id) => {
+    setCart((prevCart) => prevCart.filter((item) => item.id !== id));
+  };
+
+  const handleCheckout = () => {
+    setIsCartOpen(false);
+    setShowCheckoutSuccess(true);
+    setCart([]);
+  };
+
+  const handleNavigate = (sectionId) => {
+    const element = document.getElementById(sectionId);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-stone-950 text-stone-100 flex flex-col selection:bg-amber-500 selection:text-stone-950">
+      {/* Sticky Navigation */}
+      <Navbar
+        cart={cart}
+        onCartOpen={() => setIsCartOpen(true)}
+        onNavigate={handleNavigate}
+      />
+
+      {/* Main Content */}
+      <main className="flex-grow">
+        {/* Hero Section */}
+        <Hero onExploreMenu={() => handleNavigate('menu')} />
+
+        {/* Interactive Menu Section */}
+        <MenuSection onSelectItem={(item) => setSelectedItem(item)} />
+
+        {/* Brewing Showcase Section */}
+        <BrewingShowcase />
+
+        {/* About / Testimonials Section */}
+        <section id="about" className="py-20 bg-stone-900 border-t border-stone-800">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="grid lg:grid-cols-12 gap-12 items-center">
+              {/* Left: Story */}
+              <div className="lg:col-span-5 text-left space-y-6">
+                <span className="text-xs font-bold text-amber-500 uppercase tracking-widest">Our Story</span>
+                <h2 className="text-3xl sm:text-4xl font-extrabold text-stone-100 tracking-tight">
+                  Sourced with Care, Roasted with Passion
+                </h2>
+                <p className="text-stone-400 leading-relaxed">
+                  Founded in 2018, Bean & Brew began with a simple mission, building direct-trade relationships with farmers who prioritize organic farming and fair wages.
+                </p>
+                <p className="text-stone-400 leading-relaxed">
+                  Our state-of-the-art Loring roaster allows us to roast with incredible precision, highlighting the unique terroir of every single bean.
+                </p>
+              </div>
+
+              {/* Right: Testimonials */}
+              <div className="lg:col-span-7 space-y-6">
+                <span className="text-xs font-bold text-amber-500 uppercase tracking-widest block text-left lg:text-right">
+                  What Our Community Says
+                </span>
+                <div className="grid gap-6">
+                  {TESTIMONIALS.map((t) => (
+                    <div
+                      key={t.id}
+                      className="p-6 rounded-2xl bg-stone-950 border border-stone-800/80 text-left flex gap-4 items-start"
+                    >
+                      <img
+                        src={t.avatar}
+                        alt={t.name}
+                        className="w-12 h-12 rounded-full object-cover border border-stone-800 shrink-0"
+                      />
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-1">
+                          {[...Array(t.rating)].map((_, i) => (
+                            <Star key={i} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                          ))}
+                        </div>
+                        <p className="text-stone-300 text-sm italic leading-relaxed">"{t.comment}"</p>
+                        <div>
+                          <h4 className="text-xs font-bold text-stone-200">{t.name}</h4>
+                          <p className="text-[10px] text-stone-500">{t.role}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      {/* Footer with Contact Info */}
+      <Footer />
+
+      {/* Item Customization Modal */}
+      <ItemModal
+        item={selectedItem}
+        onClose={() => setSelectedItem(null)}
+        onAddToCart={handleAddToCart}
+      />
+
+      {/* Shopping Cart Drawer */}
+      <CartDrawer
+        isOpen={isCartOpen}
+        onClose={() => setIsCartOpen(false)}
+        cart={cart}
+        onUpdateQuantity={handleUpdateQuantity}
+        onRemoveItem={handleRemoveItem}
+        onCheckout={handleCheckout}
+      />
+
+      {/* Toast Notification */}
+      {showNotification && (
+        <div className="fixed bottom-6 right-6 z-50 bg-stone-900 border border-amber-500/30 text-stone-100 px-5 py-4 rounded-2xl shadow-2xl flex items-center gap-3 max-w-sm animate-slide-in">
+          <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-500 shrink-0">
+            <CheckCircle2 className="w-5 h-5" />
+          </div>
+          <div className="flex-grow text-left">
+            <p className="text-xs font-bold text-stone-200">Added to Order</p>
+            <p className="text-[11px] text-stone-400 mt-0.5">{showNotification}</p>
+          </div>
+          <button
+            onClick={() => setShowNotification(null)}
+            className="text-stone-500 hover:text-stone-300 transition-colors"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
+      {/* Checkout Success Modal */}
+      {showCheckoutSuccess && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-950/90 backdrop-blur-sm animate-fade-in">
+          <div className="bg-stone-900 border border-stone-800 rounded-3xl p-8 max-w-md w-full text-center space-y-6 shadow-2xl">
+            <div className="w-16 h-16 rounded-full bg-emerald-500/10 text-emerald-400 flex items-center justify-center mx-auto border border-emerald-500/20">
+              <CheckCircle2 className="w-10 h-10" />
+            </div>
+            <div className="space-y-2">
+              <h3 className="text-2xl font-extrabold text-stone-100">Order Placed!</h3>
+              <p className="text-sm text-stone-400 leading-relaxed">
+                Your order has been sent to the baristas. We'll have it ready for pickup at our Seattle location in 10 minutes.
+              </p>
+            </div>
+            <div className="bg-stone-950 p-4 rounded-xl border border-stone-800 text-xs text-stone-400 space-y-1.5 text-left">
+              <p className="flex justify-between">
+                <span>Pickup Location:</span>
+                <span className="font-bold text-stone-200">452 Brewmaster Way</span>
+              </p>
+              <p className="flex justify-between">
+                <span>Estimated Time:</span>
+                <span className="font-bold text-amber-400">10 mins</span>
+              </p>
+              <p className="flex justify-between">
+                <span>Order ID:</span>
+                <span className="font-mono text-stone-300">#BB-{Math.floor(1000 + Math.random() * 9000)}</span>
+              </p>
+            </div>
+            <button
+              onClick={() => setShowCheckoutSuccess(false)}
+              className="w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-stone-950 font-bold transition-colors"
+            >
+              Awesome, Thanks!
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+}
+    };
+    var __cache = {};
+    function __require(key) {
+      if (__cache[key]) return __cache[key];
+      var module = { exports: {} };
+      var exports = module.exports;
+      if (__modules[key]) {
+        __modules[key](module, exports, __require);
+      }
+      __cache[key] = module.exports;
+      return module.exports;
+    }
+
+    // Transform all modules through Babel for JSX
+    var babel = Babel;
+    var __transformedModules = {};
+    for (var key in __modules) {
+      var src = __modules[key].toString();
+      // Extract the function body
+      var bodyMatch = src.match(/function\(module, exports, __require\)\s*\{([\s\S]*)\}/);
+      if (bodyMatch) {
+        var body = bodyMatch[1];
+        try {
+          var transformed = babel.transform(body, {
+            presets: [['react', { runtime: 'classic' }]],
+            filename: key
+          }).code;
+          __transformedModules[key] = transformed;
+        } catch(e) {
+          console.error('Babel transform error for ' + key + ':', e.message);
+          __transformedModules[key] = body;
+        }
+      }
+    }
+
+    // Rebuild __modules with transformed code
+    __modules = {};
+    for (var key2 in __transformedModules) {
+      __modules[key2] = function(module, exports, __require) {
+        eval(__transformedModules[key2]);
+      };
+    }
+
+    // Render
+    try {
+      var entryMod = __require('src/App.tsx');
+      var App = entryMod.default || entryMod;
+      var root = document.getElementById('root');
+      ReactDOM.createRoot(root).render(React.createElement(App));
+      console.log('RENDER_SUCCESS');
+    } catch(e) {
+      console.error('RENDER_ERROR:', e.message, e.stack);
+    }
+  </script>
+</body>
+</html>
