@@ -194,6 +194,7 @@ function buildProviderRequest(prompt: string, config: ProviderConfig) {
     body: {
       model: config.model,
       messages: [{ role: "user", content: prompt }],
+      response_format: { type: "json_object" },
     },
   }
 }
@@ -219,15 +220,31 @@ async function executeProviderRequest(
   config: ProviderConfig,
 ): Promise<ProviderGenerationResult> {
   const requestConfig = buildProviderRequest(prompt, config)
+  const providerLabel = `${requestConfig.provider}:${requestConfig.model ?? "?"}`
+  const fetchStart = Date.now()
   const response = await fetch(requestConfig.endpoint, {
     method: "POST",
     headers: requestConfig.headers,
     body: JSON.stringify(requestConfig.body),
+    signal: AbortSignal.timeout(180000),
+  }).catch((err: unknown) => {
+    const elapsed = ((Date.now() - fetchStart) / 1000).toFixed(1)
+    console.error(`[provider] ${providerLabel} fetch error after ${elapsed}s:`, err)
+    throw err
   })
 
-  const payload = await response.json().catch(() => null)
+  const fetchElapsed = ((Date.now() - fetchStart) / 1000).toFixed(1)
+
+  const responseText = await response.text()
+  let payload: unknown = null
+  try {
+    payload = responseText ? JSON.parse(responseText) : null
+  } catch {
+    payload = null
+  }
   if (!response.ok) {
     const classification = classifyGeminiError(payload, response.status)
+    console.warn(`[provider] ${providerLabel} error ${response.status}: ${classification.category}`)
     throw new ProviderRequestError(
       classification.message,
       classification.category,
@@ -235,6 +252,7 @@ async function executeProviderRequest(
     )
   }
 
+  console.log(`[provider] ${providerLabel} OK in ${fetchElapsed}s`)
   return {
     response: parseProviderResponse(payload, requestConfig.provider),
     provider: requestConfig.provider,
@@ -662,7 +680,7 @@ export async function generateWithProvider(
           status: error.status,
           message: error.message,
         }
-        console.warn("[generateWithProvider]", logEntry)
+        console.warn("[provider] retry:", logEntry)
         pushProviderLog(logEntry)
         persistProviderLog(logEntry)
         lastErr = error
