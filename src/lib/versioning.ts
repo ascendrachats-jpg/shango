@@ -616,12 +616,25 @@ export function applyGenerationResultToProject(
   const existingCurrentVersion = nextBaseProject.versions.find(
     (version) => version.isCurrent,
   )
-  if (existingCurrentVersion) {
+  // A "placeholder" version is one created when the project was first started
+  // but before any real generation produced files — it has no artifact (or an
+  // artifact with no real content/files). The first real generation should
+  // update such a placeholder in-place so the version count reflects a single
+  // initial draft. Once a version holds a real generated artifact, subsequent
+  // iterations MUST create a NEW version (so undo/version history accumulates).
+  const isPlaceholderVersion =
+    existingCurrentVersion &&
+    (!existingCurrentVersion.artifact ||
+      !existingCurrentVersion.files ||
+      existingCurrentVersion.files.length === 0)
+
+  if (existingCurrentVersion && isPlaceholderVersion) {
     const updatedVersions = nextBaseProject.versions.map((version) =>
       version.id === existingCurrentVersion.id
         ? {
             ...version,
             artifact: derivedArtifact,
+            files: mergedWorkspaceFiles,
             assistantMessage: result.assistant,
             timestamp: completedAt,
             createdAt: version.createdAt ?? completedAt,

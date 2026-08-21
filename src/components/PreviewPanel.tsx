@@ -99,17 +99,21 @@ export default function PreviewPanel({
   }, [setConsoleLogs, onRuntimeDiagnostic])
   // ActivityStatus is the single source of truth for stage metadata
   const effectiveStatus =
-    activityStatus ?? { status: "awaiting_direction" } as ActivityStatus
+    activityStatus ?? { status: "idle" } as ActivityStatus
   const meta = statusToLine(effectiveStatus)
   const stageMeta = {
     title: meta.title,
     description: meta.description,
     color: "rgba(255,255,255,0.72)",
   }
+  const isActive = effectiveStatus.status === "understanding" ||
+    effectiveStatus.status === "building" ||
+    effectiveStatus.status === "validating" ||
+    effectiveStatus.status === "repairing"
   const shellShadow =
-    buildSuccess || stageMeta.title === "Ready to review"
-      ? "0 0 0 1px rgba(74,222,128,0.16), 0 8px 24px rgba(0,0,0,0.34)"
-      : effectiveStatus.status !== "awaiting_direction"
+    effectiveStatus.status === "ready"
+      ? "0 0 0 1px rgba(255,255,255,0.06), 0 8px 24px rgba(0,0,0,0.34)"
+      : isActive
         ? "0 0 0 1px rgba(255,255,255,0.025), 0 10px 24px rgba(0,0,0,0.34)"
         : "0 0 0 1px rgba(255,255,255,0.015), 0 14px 36px rgba(0,0,0,0.42)"
 
@@ -148,9 +152,7 @@ export default function PreviewPanel({
         }
         @keyframes indeterminate { 0% { background-position: 0% 50% } 100% { background-position: -200% 50% } }
       `}</style>
-      {(effectiveStatus.status !== "awaiting_direction" ||
-        isRebuilding ||
-        buildSuccess) && (
+      {(isActive || isRebuilding || buildSuccess) && (
         <div
           style={{
             height: 36,
@@ -169,30 +171,12 @@ export default function PreviewPanel({
               height: 6,
               borderRadius: "50%",
               background:
-                effectiveStatus.status === "workspace_updated" ||
-                effectiveStatus.status === "ready_for_refinement"
-                  ? "#4ade80"
-                  : stageMeta.color,
-              boxShadow:
-                effectiveStatus.status === "workspace_updated" ||
-                effectiveStatus.status === "ready_for_refinement"
-                  ? "0 0 0 6px rgba(74,222,128,0.12)"
-                  : effectiveStatus.status === "applying_workspace_changes" ||
-                      effectiveStatus.status === "assistant_composing"
-                    ? `0 0 0 6px ${
-                        effectiveStatus.status === "assistant_composing"
-                          ? "rgba(139,147,255,0.12)"
-                          : "rgba(96,165,250,0.12)"
-                      }`
-                    : "none",
-              animation:
-                effectiveStatus.status === "applying_workspace_changes" ||
-                effectiveStatus.status === "assistant_composing"
-                  ? "live-pulse 1.4s ease-in-out infinite"
-                  : effectiveStatus.status === "workspace_updated" ||
-                      effectiveStatus.status === "ready_for_refinement"
-                    ? "live-pulse 1.8s ease-in-out infinite"
-                    : "none",
+                effectiveStatus.status === "ready"
+                  ? "rgba(255,255,255,0.8)"
+                  : effectiveStatus.status === "failed"
+                    ? "rgba(255,255,255,0.4)"
+                    : "rgba(255,255,255,0.6)",
+              animation: isActive ? "buildPulse 1.4s ease-in-out infinite" : "none",
             }}
           />
           <div style={{ flex: 1, minWidth: 0 }}>
@@ -219,26 +203,28 @@ export default function PreviewPanel({
             </div>
           </div>
           {/* Indeterminate minimalist progress — does not claim a percentage. */}
-          <div
-            style={{
-              width: 92,
-              height: 6,
-              borderRadius: 999,
-              background: "rgba(255,255,255,0.06)",
-              overflow: "hidden",
-              flexShrink: 0,
-            }}
-          >
+          {isActive && (
             <div
               style={{
-                width: "200%",
-                height: "100%",
-                background: `linear-gradient(90deg, transparent, ${stageMeta.color}, transparent)`,
-                backgroundSize: "200% 100%",
-                animation: "indeterminate 1.4s linear infinite",
+                width: 92,
+                height: 6,
+                borderRadius: 999,
+                background: "rgba(255,255,255,0.06)",
+                overflow: "hidden",
+                flexShrink: 0,
               }}
-            />
-          </div>
+            >
+              <div
+                style={{
+                  width: "200%",
+                  height: "100%",
+                  background: `linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)`,
+                  backgroundSize: "200% 100%",
+                  animation: "indeterminate 1.4s linear infinite",
+                }}
+              />
+            </div>
+          )}
         </div>
       )}
 
@@ -275,9 +261,9 @@ export default function PreviewPanel({
               border: "none",
               boxShadow: shellShadow,
               animation: isRebuilding
-                ? "ambient-build-glow 2.2s ease-in-out infinite"
+                ? "shango-panel-enter 0.4s cubic-bezier(0.16,1,0.3,1)"
                 : buildSuccess
-                  ? "success-glow 1.2s ease forwards, shango-panel-enter 0.4s cubic-bezier(0.16,1,0.3,1)"
+                  ? "shango-panel-enter 0.4s cubic-bezier(0.16,1,0.3,1)"
                   : "shango-panel-enter 0.4s cubic-bezier(0.16,1,0.3,1)",
               overflow: "hidden",
               transition: "width 0.42s cubic-bezier(0.2, 0.8, 0.2, 1)",
@@ -299,18 +285,14 @@ export default function PreviewPanel({
                   inset: 0,
                   pointerEvents: "none",
                   background:
-                    "linear-gradient(180deg, rgba(74,222,128,0.08) 0%, rgba(74,222,128,0.02) 32%, transparent 100%)",
+                    "linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 32%, transparent 100%)",
                   animation: "shango-fade-up 0.28s cubic-bezier(0.16,1,0.3,1)",
                 }}
               />
             )}
             <ArchitectWhisper
               message={stageMeta.title}
-              visible={[
-                "request_sent",
-                "assistant_composing",
-                "applying_workspace_changes",
-              ].includes(effectiveStatus.status)}
+              visible={isActive}
             />
             <ConfidenceCard activityStatus={activityStatus} />
           </div>
@@ -381,14 +363,13 @@ export default function PreviewPanel({
                     width: 5,
                     height: 5,
                     borderRadius: "50%",
-                    background: "#4ade80",
-                    boxShadow: "0 0 4px rgba(74,222,128,0.5)",
+                    background: "rgba(255,255,255,0.6)",
                   }}
                 />
                 <span
                   style={{
                     fontSize: 9,
-                    color: "#4ade80",
+                    color: "rgba(255,255,255,0.6)",
                     fontFamily: "var(--font-mono-jetbrains)",
                     letterSpacing: "0.08em",
                   }}
@@ -638,17 +619,6 @@ function PreviewSkeleton({
 }: {
   consoleLogs?: ConsoleEntry[]
 }) {
-  const [hydrationLevel, setHydrationLevel] = useState(0)
-
-  useEffect(() => {
-    const int = setInterval(() => {
-      setHydrationLevel((prev) =>
-        Math.min(prev + Math.floor(Math.random() * 5), 43),
-      )
-    }, 400)
-    return () => clearInterval(int)
-  }, [])
-
   return (
     <div
       style={{
@@ -677,9 +647,7 @@ function PreviewSkeleton({
               width: 8,
               height: 8,
               borderRadius: "50%",
-              background: "#ef4444",
-              opacity: 0.5,
-              animation: "buildPulse 1.8s ease-in-out infinite",
+              background: "rgba(255,255,255,0.15)",
             }}
           />
           <div
@@ -687,9 +655,7 @@ function PreviewSkeleton({
               width: 8,
               height: 8,
               borderRadius: "50%",
-              background: "#eab308",
-              opacity: 0.5,
-              animation: "buildPulse 1.8s ease-in-out infinite 0.2s",
+              background: "rgba(255,255,255,0.15)",
             }}
           />
           <div
@@ -697,56 +663,11 @@ function PreviewSkeleton({
               width: 8,
               height: 8,
               borderRadius: "50%",
-              background: "#22c55e",
-              opacity: 0.5,
-              animation: "buildPulse 1.8s ease-in-out infinite 0.4s",
+              background: "rgba(255,255,255,0.15)",
             }}
           />
         </div>
         <div style={{ flex: 1 }} />
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            background: "rgba(56,189,248,0.06)",
-            border: "1px solid rgba(56,189,248,0.15)",
-            padding: "4px 12px",
-            borderRadius: 4,
-          }}
-        >
-          <span
-            style={{
-              fontSize: 10,
-              color: "#38bdf8",
-              fontFamily: "var(--font-mono-jetbrains)",
-              letterSpacing: "0.04em",
-            }}
-          >
-            Hydrating UI...
-          </span>
-          <span
-            style={{
-              fontSize: 10,
-              color: "rgba(56,189,248,0.5)",
-              fontFamily: "var(--font-mono-jetbrains)",
-              letterSpacing: "0.1em",
-            }}
-          >
-            [{"█".repeat(Math.floor((hydrationLevel / 43) * 6))}
-            {"░".repeat(6 - Math.floor((hydrationLevel / 43) * 6))}]
-          </span>
-          <span
-            style={{
-              fontSize: 10,
-              color: "#38bdf8",
-              fontFamily: "var(--font-mono-jetbrains)",
-              opacity: 0.8,
-            }}
-          >
-            {hydrationLevel}/43
-          </span>
-        </div>
       </div>
       <div
         style={{
@@ -759,22 +680,7 @@ function PreviewSkeleton({
           position: "relative",
         }}
       >
-        {/* Blueprint Hydration Lines */}
-        <div
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background:
-              "linear-gradient(rgba(56,189,248,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(56,189,248,0.03) 1px, transparent 1px)",
-            backgroundSize: "40px 40px",
-            animation: "shango-decode-pulse 3s infinite alternate",
-          }}
-        />
-
-        {/* Component Assembly Skeletons */}
+        {/* Skeleton placeholder blocks — neutral gray, no fake progress. */}
         <div
           style={{
             width: "100%",
@@ -789,9 +695,8 @@ function PreviewSkeleton({
             style={{
               height: 60,
               width: "100%",
-              border: "1px solid rgba(56,189,248,0.2)",
-              background: "rgba(56,189,248,0.02)",
-              animation: "shango-kinetic-flow 0.5s ease-out",
+              border: "1px solid rgba(255,255,255,0.06)",
+              background: "rgba(255,255,255,0.02)",
             }}
           />
           <div style={{ display: "flex", gap: 20 }}>
@@ -799,32 +704,19 @@ function PreviewSkeleton({
               style={{
                 height: 400,
                 flex: 1,
-                border: "1px solid rgba(56,189,248,0.2)",
-                background: "rgba(56,189,248,0.02)",
-                animation: "shango-kinetic-flow 0.6s ease-out",
+                border: "1px solid rgba(255,255,255,0.06)",
+                background: "rgba(255,255,255,0.02)",
               }}
             />
             <div
               style={{
                 height: 400,
                 flex: 2,
-                border: "1px solid rgba(56,189,248,0.2)",
-                background: "rgba(56,189,248,0.02)",
-                animation: "shango-kinetic-flow 0.7s ease-out",
+                border: "1px solid rgba(255,255,255,0.06)",
+                background: "rgba(255,255,255,0.02)",
               }}
             />
           </div>
-        </div>
-        <div
-          style={{
-            color: "rgba(249,115,22,0.5)",
-            fontSize: 11,
-            fontFamily: "var(--font-mono-jetbrains)",
-            textAlign: "center",
-            marginTop: 16,
-          }}
-        >
-          Initializing matrix...
         </div>
       </div>
     </div>

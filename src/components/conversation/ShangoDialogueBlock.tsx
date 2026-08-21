@@ -7,7 +7,7 @@ interface Props {
 
 /**
  * Renders Shango's response in a dialogue.
- * This is styled to look like a standard assistant chat bubble for now.
+ * Monochrome, quiet, factual. No fake "Thinking..." indicator.
  */
 export function ShangoDialogueBlock({ block }: Props) {
   return (
@@ -32,7 +32,7 @@ export function ShangoDialogueBlock({ block }: Props) {
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <span style={{ color: "#f2b96b", fontSize: 12 }}>✦</span>
+          <span style={{ color: "rgba(255,255,255,0.5)", fontSize: 12 }}>◆</span>
           <span
             style={{
               fontSize: 12,
@@ -43,30 +43,31 @@ export function ShangoDialogueBlock({ block }: Props) {
           >
             Shango
           </span>
-          <span
-            style={{
-              fontSize: 10,
-              color: "rgba(255, 255, 255, 0.35)",
-              fontFamily: "var(--font-mono-jetbrains)",
-            }}
-          >
-            {block.pending ? "generating..." : "completed"}
-          </span>
         </div>
       </div>
 
-      <div>{block.content}</div>
+      {block.content && (
+        <div
+          style={{
+            fontSize: 13,
+            lineHeight: 1.55,
+            color: "rgba(255, 255, 255, 0.75)",
+            fontFamily: "var(--font-geist)",
+          }}
+        >
+          {block.content}
+        </div>
+      )}
 
-      {block.pending && (
+      {block.pending && !block.content && (
         <div
           style={{
             display: "flex",
             alignItems: "center",
             gap: 6,
             fontSize: 11.5,
-            color: "#f2b96b",
+            color: "rgba(255, 255, 255, 0.4)",
             fontFamily: "var(--font-geist)",
-            marginTop: 4,
           }}
         >
           <span
@@ -74,11 +75,11 @@ export function ShangoDialogueBlock({ block }: Props) {
               width: 5,
               height: 5,
               borderRadius: "50%",
-              background: "#f2b96b",
-              animation: "pulse 1s infinite",
+              background: "rgba(255, 255, 255, 0.5)",
+              animation: "pulse 1.2s ease-in-out infinite",
             }}
           />
-          <span>Thinking...</span>
+          <span>Working</span>
         </div>
       )}
     </div>

@@ -1,43 +1,24 @@
 import { describe, expect, it } from "vitest"
 import {
   deployValidatedWorkspace,
-  DefaultDeploymentProvider,
   type DeploymentRequest,
   type DeploymentProvider,
 } from "../lib/deployments"
 import { requestProjectExport } from "../lib/exportShare"
-import { statusToLine } from "../lib/activityStatus"
+import { statusToLine, pipelineStatusToState } from "../lib/activityStatus"
 import type { ActivityStatus, ActivityStateKey } from "../lib/activityStatus"
 
-// ── All known state keys — the full surface contract ──────────────────────────
+// ── All known state keys — the 8-state surface contract ─────────────────────
 
 const ALL_STATE_KEYS: ActivityStateKey[] = [
-  "awaiting_direction",
-  "request_sent",
-  "request_received",
+  "idle",
   "understanding",
-  "planning",
-  "architecting",
-  "preparing",
-  "executing",
-  "file_created",
-  "file_updated",
-  "file_deleted",
-  "validation_started",
-  "validation_failed",
-  "runtime_error",
-  "repair_started",
-  "repair_completed",
-  "preview_updated",
-  "build_completed",
-  "build_failed",
-  "cancelled",
-  "assistant_composing",
-  "applying_workspace_changes",
-  "workspace_updated",
-  "ready_for_refinement",
-  "generation_stopped",
-  "generation_failed",
+  "building",
+  "validating",
+  "repairing",
+  "ready",
+  "failed",
+  "stopped",
 ]
 
 // Raw internal codes that must never appear in user-facing output
@@ -128,9 +109,9 @@ describe("Product Simplification — Save & Deploy", () => {
   })
 })
 
-// ── Simple Builder Contract — Natural Language Events ─────────────────────────
+// ── Simple Builder Contract — 8-state Activity Model ─────────────────────────
 
-describe("Simple Builder Contract — Natural Language Events", () => {
+describe("Simple Builder Contract — 8-State Activity Model", () => {
   it("every ActivityStateKey produces a non-empty human-readable title", () => {
     for (const key of ALL_STATE_KEYS) {
       const status: ActivityStatus = { status: key }
@@ -158,15 +139,11 @@ describe("Simple Builder Contract — Natural Language Events", () => {
 
   it("the build lifecycle journey uses only user-facing language from start to finish", () => {
     const journey: ActivityStateKey[] = [
-      "request_sent",
       "understanding",
-      "planning",
-      "executing",
-      "validation_started",
-      "validation_failed",
-      "repair_started",
-      "repair_completed",
-      "build_completed",
+      "building",
+      "validating",
+      "repairing",
+      "ready",
     ]
 
     const titles = journey.map((key) => statusToLine({ status: key }).title)
@@ -175,82 +152,58 @@ describe("Simple Builder Contract — Natural Language Events", () => {
     expect(titles[0].toLowerCase()).toMatch(/understanding|request|working|ready/)
 
     // Build step should communicate writing/working
-    const buildTitle = statusToLine({ status: "executing" }).title.toLowerCase()
+    const buildTitle = statusToLine({ status: "building" }).title.toLowerCase()
     expect(buildTitle).toMatch(/writing|building|working/)
 
-    // Validation communicates user-facing intent (not "validating workspace")
-    const validationTitle = statusToLine({ status: "validation_started" }).title.toLowerCase()
+    // Validation communicates user-facing intent
+    const validationTitle = statusToLine({ status: "validating" }).title.toLowerCase()
     expect(validationTitle).toMatch(/ready|app|run|making|checking/)
 
     // Repair communicates finding and fixing — not diagnostic codes
-    const repairTitle = statusToLine({ status: "repair_started" }).title.toLowerCase()
+    const repairTitle = statusToLine({ status: "repairing" }).title.toLowerCase()
     expect(repairTitle).toMatch(/found|fixing|issue|fix/)
 
     // Completion always points user toward Preview
-    const completionTitle = statusToLine({ status: "build_completed" }).title.toLowerCase()
+    const completionTitle = statusToLine({ status: "ready" }).title.toLowerCase()
     expect(completionTitle).toMatch(/preview|ready/)
   })
 
   it("failure messages are understandable without technical knowledge", () => {
-    const { title: buildFailed } = statusToLine({ status: "build_failed" })
-    const { title: generationFailed } = statusToLine({ status: "generation_failed" })
+    const { title: buildFailed } = statusToLine({ status: "failed" })
 
-    // Must not contain raw internal terms
-    expect(buildFailed.toLowerCase()).not.toContain("failed")  // "build failed" as raw code
-    expect(generationFailed.toLowerCase()).not.toContain("generation_failed")
+    // Must not contain raw internal terms as raw codes
+    expect(buildFailed.toLowerCase()).not.toContain("build_failed")
+    expect(buildFailed.toLowerCase()).not.toContain("generation_failed")
 
     // Must communicate that the user can retry
     expect(buildFailed.toLowerCase()).toMatch(/try|again|couldn|finish/)
-    expect(generationFailed.toLowerCase()).toMatch(/try|again|couldn|finish/)
   })
 
   it("repair messages communicate 'found an issue and fixing it' without exposing diagnostic codes", () => {
-    const repairKeys: ActivityStateKey[] = ["validation_failed", "runtime_error", "repair_started"]
-
-    for (const key of repairKeys) {
-      const { title } = statusToLine({ status: key })
-      const lower = title.toLowerCase()
-
-      // Must sound like Shango found something and is handling it
-      expect(lower).toMatch(/found|fixing|issue|fix/)
-
-      // Must not contain raw internal codes
-      expect(lower).not.toContain("validation_failed")
-      expect(lower).not.toContain("runtime_error")
-      expect(lower).not.toContain("repair_started")
-      expect(lower).not.toContain("diagnostic")
-    }
-  })
-
-  it("repair completion signals readiness, not technical completion", () => {
-    const { title } = statusToLine({ status: "repair_completed" })
+    const { title } = statusToLine({ status: "repairing" })
     const lower = title.toLowerCase()
 
-    // Should communicate heading toward ready, not "repair_completed"
-    expect(lower).not.toContain("repair_completed")
-    expect(lower).toMatch(/fixed|checking|ready|app/)
+    // Must sound like Shango found something and is handling it
+    expect(lower).toMatch(/found|fixing|issue|fix/)
+
+    // Must not contain raw internal codes
+    expect(lower).not.toContain("validation_failed")
+    expect(lower).not.toContain("runtime_error")
+    expect(lower).not.toContain("repair_started")
+    expect(lower).not.toContain("diagnostic")
   })
 
   it("completion states always guide the user toward Preview", () => {
-    const completionKeys: ActivityStateKey[] = [
-      "build_completed",
-      "workspace_updated",
-      "ready_for_refinement",
-      "preview_updated",
-    ]
-
-    for (const key of completionKeys) {
-      const { title } = statusToLine({ status: key })
-      expect(
-        title.toLowerCase(),
-        `State "${key}" should orient the user toward Preview`,
-      ).toMatch(/preview|ready/)
-    }
+    const { title } = statusToLine({ status: "ready" })
+    expect(
+      title.toLowerCase(),
+      `State "ready" should orient the user toward Preview`,
+    ).toMatch(/preview|ready/)
   })
 
   it("custom message override is surfaced directly without appending internal state key", () => {
     const status: ActivityStatus = {
-      status: "executing",
+      status: "building",
       message: "Writing the data model...",
     }
 
@@ -258,7 +211,7 @@ describe("Simple Builder Contract — Natural Language Events", () => {
 
     expect(title).toBe("Writing the data model...")
     // Must not expose the raw state key in description
-    expect(description ?? "").not.toContain("executing")
+    expect(description ?? "").not.toContain("building")
     expect(description ?? "").not.toContain("State:")
   })
 
@@ -291,17 +244,56 @@ describe("Simple Builder Contract — Natural Language Events", () => {
     }
   })
 
-  it("stopped/cancelled states are brief and honest", () => {
-    const { title: stopped } = statusToLine({ status: "generation_stopped" })
-    const { title: cancelled } = statusToLine({ status: "cancelled" })
+  it("stopped state is brief and honest", () => {
+    const { title: stopped } = statusToLine({ status: "stopped" })
 
     // Brief — not a verbose explanation
     expect(stopped.length).toBeLessThan(30)
-    expect(cancelled.length).toBeLessThan(30)
 
     // No raw codes
     expect(stopped.toLowerCase()).not.toContain("generation_stopped")
-    expect(cancelled.toLowerCase()).not.toContain("cancelled")
+    expect(stopped.toLowerCase()).not.toContain("cancelled")
   })
 })
 
+// ── Pipeline Status Mapping ─────────────────────────────────────────────────
+
+describe("pipelineStatusToState — maps raw pipeline events to 8 states", () => {
+  it("maps request_received, planning, architecting to understanding", () => {
+    expect(pipelineStatusToState("request_received")).toBe("understanding")
+    expect(pipelineStatusToState("planning")).toBe("understanding")
+    expect(pipelineStatusToState("architecting")).toBe("understanding")
+  })
+
+  it("maps executing and file operations to building", () => {
+    expect(pipelineStatusToState("executing")).toBe("building")
+    expect(pipelineStatusToState("file_created")).toBe("building")
+    expect(pipelineStatusToState("file_updated")).toBe("building")
+    expect(pipelineStatusToState("file_deleted")).toBe("building")
+  })
+
+  it("maps validating and validation_passed to validating", () => {
+    expect(pipelineStatusToState("validating")).toBe("validating")
+    expect(pipelineStatusToState("validation_passed")).toBe("validating")
+  })
+
+  it("maps validation_failed, repair_started, repair_completed to repairing", () => {
+    expect(pipelineStatusToState("validation_failed")).toBe("repairing")
+    expect(pipelineStatusToState("repair_started")).toBe("repairing")
+    expect(pipelineStatusToState("repair_completed")).toBe("repairing")
+  })
+
+  it("maps build_completed to ready", () => {
+    expect(pipelineStatusToState("build_completed")).toBe("ready")
+  })
+
+  it("maps build_failed and repair_failed to failed", () => {
+    expect(pipelineStatusToState("build_failed")).toBe("failed")
+    expect(pipelineStatusToState("repair_failed")).toBe("failed")
+  })
+
+  it("maps unknown status strings to understanding (safest active state)", () => {
+    expect(pipelineStatusToState("unknown_event")).toBe("understanding")
+    expect(pipelineStatusToState("")).toBe("understanding")
+  })
+})

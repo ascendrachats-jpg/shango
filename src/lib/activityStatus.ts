@@ -1,144 +1,111 @@
+/**
+ * ActivityStatus — the 8-state model for conversation activity.
+ *
+ * Every state reflects a real event from the generation pipeline.
+ * No fake typing, no fake thinking, no arbitrary timers, no simulated AI activity.
+ * The conversation area is driven entirely by what actually happens.
+ *
+ * States:
+ *   idle        — nothing is happening; ready for the next request
+ *   understanding — a request was sent; Shango is interpreting it
+ *   building    — file operations are being applied to the workspace
+ *   validating  — the workspace is being checked (TypeScript, entry points, imports)
+ *   repairing   — validation failed and a repair attempt is in progress
+ *   ready       — the build completed successfully; Preview reflects reality
+ *   failed      — the build could not complete; the user can retry
+ *   stopped     — the user cancelled the build
+ */
+
 export type ActivityStateKey =
-  | "awaiting_direction"
-  | "request_sent"
-  | "request_received"
+  | "idle"
   | "understanding"
-  | "planning"
-  | "architecting"
-  | "preparing"
-  | "executing"
-  | "file_created"
-  | "file_updated"
-  | "file_deleted"
-  | "validation_started"
-  | "validation_failed"
-  | "runtime_error"
-  | "repair_started"
-  | "repair_completed"
-  | "preview_updated"
-  | "build_completed"
-  | "build_failed"
-  | "cancelled"
-  | "assistant_composing"
-  | "applying_workspace_changes"
-  | "workspace_updated"
-  | "ready_for_refinement"
-  | "generation_stopped"
-  | "generation_failed"
+  | "building"
+  | "validating"
+  | "repairing"
+  | "ready"
+  | "failed"
+  | "stopped"
 
 export interface ActivityStatus {
   status: ActivityStateKey
-  // optional factual details, e.g. number of files changed
+  /** Optional factual details (e.g. the file path being changed). */
   details?: {
     filesChanged?: number
     path?: string
   }
-  // optional human-friendly message override
+  /** Optional factual message override — no marketing language. */
   message?: string
 }
 
 export const initialActivityStatus: ActivityStatus = {
-  status: "awaiting_direction",
+  status: "idle",
 }
 
+/**
+ * Map a raw pipeline status string (emitted by server/generationPipeline/pipeline.ts)
+ * to one of the 8 ActivityStateKey values. This is the single source of truth
+ * that connects real backend events to the conversation UI.
+ */
+export function pipelineStatusToState(raw: string): ActivityStateKey {
+  switch (raw) {
+    case "request_received":
+    case "planning":
+    case "architecting":
+      return "understanding"
+    case "executing":
+    case "file_created":
+    case "file_updated":
+    case "file_deleted":
+      return "building"
+    case "validating":
+    case "validation_passed":
+      return "validating"
+    case "validation_failed":
+    case "repair_started":
+    case "repair_completed":
+      return "repairing"
+    case "build_completed":
+      return "ready"
+    case "build_failed":
+    case "repair_failed":
+      return "failed"
+    default:
+      // Unknown status strings default to understanding (safest active state).
+      return "understanding"
+  }
+}
+
+/**
+ * Produce a quiet, factual human-readable line for the current activity state.
+ * No exclamation marks, no marketing language, no lifecycle jargon.
+ */
 export function statusToLine(
   s: ActivityStatus,
 ): { title: string; description?: string; color?: string } {
   if (s.message) {
-    return {
-      title: s.message,
-    }
+    return { title: s.message }
   }
 
   switch (s.status) {
-    case "awaiting_direction":
-      return {
-        title: "Ready",
-      }
-    case "request_sent":
-    case "request_received":
-      return {
-        title: "Understanding your request...",
-      }
+    case "idle":
+      return { title: "Ready" }
     case "understanding":
+      return { title: "Understanding your request" }
+    case "building":
       return {
-        title: "Understanding your request...",
+        title: s.details?.path ? `Writing ${s.details.path}` : "Writing files",
       }
-    case "planning":
-      return {
-        title: "Working out the best way to build this...",
-      }
-    case "architecting":
-      return {
-        title: "Working out the best way to build this...",
-      }
-    case "preparing":
-      return {
-        title: "Getting things ready...",
-      }
-    case "executing":
-    case "assistant_composing":
-      return {
-        title: "Writing your application...",
-      }
-    case "file_created":
-      return {
-        title: s.details?.path ? `Created ${s.details.path}` : "Writing your application...",
-      }
-    case "file_updated":
-    case "applying_workspace_changes":
-      return {
-        title: s.details?.path ? `Updated ${s.details.path}` : "Applying changes...",
-      }
-    case "file_deleted":
-      return {
-        title: s.details?.path ? `Removed ${s.details.path}` : "Applying changes...",
-      }
-    case "validation_started":
-      return {
-        title: "Making sure your app is ready to run...",
-      }
-    case "validation_failed":
-      return {
-        title: "I found an issue and I'm fixing it...",
-      }
-    case "runtime_error":
-      return {
-        title: "I found an issue and I'm fixing it...",
-      }
-    case "repair_started":
-      return {
-        title: "I found an issue and I'm fixing it...",
-      }
-    case "repair_completed":
-      return {
-        title: "Fixed. Checking your app is ready...",
-      }
-    case "preview_updated":
-      return {
-        title: "Your app is ready in Preview.",
-      }
-    case "build_completed":
-    case "workspace_updated":
-      return {
-        title: "Your app is ready in Preview.",
-      }
-    case "ready_for_refinement":
-      return {
-        title: "Your app is ready in Preview.",
-      }
-    case "cancelled":
-    case "generation_stopped":
-      return {
-        title: "Stopped.",
-      }
-    case "build_failed":
-    case "generation_failed":
-      return {
-        title: "I couldn't finish that build. You can try again.",
-      }
+    case "validating":
+      return { title: "Checking your app" }
+    case "repairing":
+      return { title: "Fixing an issue" }
+    case "ready":
+      return { title: "Your app is ready in Preview" }
+    case "failed":
+      return { title: "The build could not finish. You can retry." }
+    case "stopped":
+      return { title: "Stopped" }
     default:
       return { title: "Ready" }
   }
 }
-

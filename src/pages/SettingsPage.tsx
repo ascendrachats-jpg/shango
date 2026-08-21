@@ -1119,17 +1119,6 @@ export default function SettingsPage() {
                       )
                     }
                   />
-                  <Toggle
-                    label="Startup Mentor Intelligence"
-                    desc="Contextual strategy suggestions during active workspace sessions"
-                    value={true}
-                    onChange={(v) =>
-                      addToast(
-                        v ? "Startup Mentor active" : "Startup Mentor muted",
-                        "default",
-                      )
-                    }
-                  />
                 </div>
               </Field>
             </Section>

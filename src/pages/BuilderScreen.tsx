@@ -40,7 +40,6 @@ import {
   syncProjectToBackend,
 } from "../lib/persistence"
 import {
-  appendChatMessageToProject,
   applyGenerationResultToProject,
   applyVersionAction,
   findSensitiveWorkspaceChanges,
@@ -51,15 +50,28 @@ import {
 } from "../lib/versioning"
 import { ALL_SKILLS } from "../lib/skills"
 import type { StreamedFileSnapshot } from "../lib/preview"
-import type { Project, ChatMessage } from "../lib/store"
+import type { Project } from "../lib/store"
 import { deriveComposerValue } from "../lib/builderComposer"
 import type { ActivityStatus } from "../lib/activityStatus"
-import { initialActivityStatus } from "../lib/activityStatus"
+import { initialActivityStatus, pipelineStatusToState } from "../lib/activityStatus"
+import {
+  createUserDialogueBlock,
+  createShangoDialogueBlock,
+  createExecutionBlock,
+  createResultBlock,
+  createErrorBlock,
+  type ConversationBlock,
+  type ExecutionBlock as ExecutionBlockType,
+} from "../lib/conversation"
+import {
+  getRetryPromptFromBlocks,
+  getLastUserPromptFromBlocks,
+} from "../lib/conversationHelpers"
 import { buildGenerationReview } from "../lib/generationReview"
 import { usageFraction } from "../lib/usageMeter"
 import { getActiveMaturityLabel } from "../lib/workspaceEvolution"
 import { requestProjectExport } from "../lib/exportShare"
-import { ForgeInput } from "../components/ForgeInput"
+import { ForgeInput, type OmniboxContext } from "../components/ForgeInput"
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -110,6 +122,7 @@ interface PendingGenerationReview {
   addVersion: boolean
   mode: "plan" | "build"
   pendingAssistantId: string
+  executionBlockId: string
 }
 
 function unwrapProjectResponse(
@@ -118,22 +131,7 @@ function unwrapProjectResponse(
   return "id" in payload ? payload : (payload.project ?? null)
 }
 
-export function getRetryPromptFromMessages(
-  messages: ChatMessage[],
-): string | null {
-  const lastMessage = messages[messages.length - 1]
-  if (
-    lastMessage?.role !== "assistant" ||
-    !lastMessage.content.includes("could not be completed")
-  )
-    return null
-
-  for (let index = messages.length - 2; index >= 0; index--) {
-    if (messages[index].role === "user" && messages[index].content.trim())
-      return messages[index].content
-  }
-  return null
-}
+// ─────────────────────────────────────────────────────────────────────────────
 
 // ── Main component ─────────────────────────────────────────────────────────────
 
@@ -200,25 +198,22 @@ export default function BuilderScreen() {
     Boolean(project?.generatingAt),
   )
   const [retryPrompt, setRetryPrompt] = useState<string | null>(() =>
-    getRetryPromptFromMessages(project?.messages ?? []),
+    getRetryPromptFromBlocks(project?.blocks ?? []),
   )
   const [pendingGenerationReview, setPendingGenerationReview] =
     useState<PendingGenerationReview | null>(null)
-  const [localMessages, setLocalMessages] = useState<ChatMessage[]>(
-    () => project?.messages ?? [],
-  )
   const aiTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const projectRef = useRef(project)
 
   useEffect(() => {
     projectRef.current = project ?? undefined
-  }, [project?.id, project?.messages, project?.versions, project?.artifact])
+  }, [project?.id, project?.blocks, project?.versions, project?.artifact])
 
   useEffect(() => {
     if (!project?.generatingAt)
-      setRetryPrompt(getRetryPromptFromMessages(project?.messages ?? []))
-  }, [project?.id, project?.messages, project?.generatingAt])
+      setRetryPrompt(getRetryPromptFromBlocks(project?.blocks ?? []))
+  }, [project?.id, project?.blocks, project?.generatingAt])
 
   useEffect(() => {
     const refreshSyncStatus = () =>
@@ -245,18 +240,12 @@ export default function BuilderScreen() {
     return () => window.removeEventListener("keydown", handleGlobalKeyDown)
   }, [conversationCollapsed])
 
-  useEffect(() => {
-    if (project?.messages) {
-      setLocalMessages(project.messages)
-    }
-  }, [project?.id, project?.messages])
-
   // A project started from the omnibox begins generation before this screen mounts.
   // Mirror that in-flight state so the builder immediately explains what is happening.
   useEffect(() => {
     if (project?.generatingAt) {
       setIsGenerating(true)
-      setActivityStatus({ status: "request_sent" })
+      setActivityStatus({ status: "understanding" })
       return
     }
 
@@ -267,15 +256,15 @@ export default function BuilderScreen() {
 
   useEffect(() => {
     setInput((prev) => deriveComposerValue(project, prev))
-  }, [project?.id, project?.messages, project?.initialPrompt])
+  }, [project?.id, project?.blocks, project?.initialPrompt])
 
   // Prefer explicit state transitions driven by real signals (generation/rebuild events)
   // - buildSuccess: brief ready state then back to idle
   // - isRebuilding: show building while local version rebuild is in progress
   // - isGenerating: mark submitted unless more specific events (deltas/files) update the stage
   useEffect(() => {
-    if (isGenerating && activityStatus.status === "awaiting_direction") {
-      setActivityStatus({ status: "request_sent" })
+    if (isGenerating && activityStatus.status === "idle") {
+      setActivityStatus({ status: "understanding" })
     }
   }, [isGenerating, activityStatus.status])
 
@@ -389,14 +378,14 @@ export default function BuilderScreen() {
       if (mod && e.key === "r") {
         e.preventDefault()
         if (!isGenerating) {
-          const lastUserMsg = [...localMessages]
-            .reverse()
-            .find((m) => m.role === "user")
-          if (lastUserMsg) {
+          const lastUserPrompt = getLastUserPromptFromBlocks(
+            projectRef.current?.blocks ?? [],
+          )
+          if (lastUserPrompt) {
             setIsGenerating(true)
             if (aiTimerRef.current) clearTimeout(aiTimerRef.current)
             aiTimerRef.current = setTimeout(() => {
-              void handleGenerationResponse(lastUserMsg.content, {
+              void handleGenerationResponse(lastUserPrompt, {
                 addVersion: false,
               })
             }, 0)
@@ -406,7 +395,7 @@ export default function BuilderScreen() {
     }
     window.addEventListener("keydown", handler)
     return () => window.removeEventListener("keydown", handler)
-  }, [isGenerating, localMessages])
+  }, [isGenerating, project?.blocks])
 
   // Resize handle
   const handleMouseDown = (e: ReactMouseEvent) => {
@@ -432,24 +421,22 @@ export default function BuilderScreen() {
     }
   }, [isDragging])
 
-  // Send handler: only append the user message. Version creation happens after successful generation.
+  // Send handler: append the user message as a dialogue block to the
+  // conversation. Version creation happens after successful generation.
   const handleSend = (msg: string) => {
     const currentProject = projectRef.current
     if (!currentProject || !id) return
     const now = new Date().toISOString()
-    const userMessage: ChatMessage = {
-      id: generateId(),
-      role: "user",
-      content: msg,
-      timestamp: now,
-    }
+    const userBlock = createUserDialogueBlock(msg)
     // Stamp generatingAt so mergePersistedProjects protects this project from
     // remote overwrites while generation is in flight.
-    const updatedProject = appendChatMessageToProject(
-      { ...currentProject, generatingAt: now },
-      userMessage,
-      now,
-    )
+    const updatedProject: Project = {
+      ...currentProject,
+      generatingAt: now,
+      blocks: [...(currentProject.blocks ?? []), userBlock],
+      lastEdited: now,
+      updatedAt: now,
+    }
     projectRef.current = updatedProject
     setProjects((prev) => prev.map((p) => (p.id === id ? updatedProject : p)))
     setActiveProject(id)
@@ -464,8 +451,35 @@ export default function BuilderScreen() {
     if (!currentProject || !id) return
 
     const pendingAssistantId = generateId()
+    const executionBlockId = generateId()
     const controller = new AbortController()
     abortControllerRef.current = controller
+
+    // Helper: update a single block by ID inside the current project's blocks
+    // array, persisting the change via setProjects.
+    const updateBlock = (
+      blockId: string,
+      updater: (block: ConversationBlock) => ConversationBlock,
+    ) => {
+      const proj = projectRef.current
+      if (!proj) return
+      const blocks = proj.blocks ?? []
+      const nextBlocks = blocks.map((b) =>
+        b.id === blockId ? updater(b) : b,
+      )
+      const nextProj = { ...proj, blocks: nextBlocks }
+      projectRef.current = nextProj
+      setProjects((prev) => prev.map((p) => (p.id === id ? nextProj : p)))
+    }
+
+    // Helper: append a new block to the current project's blocks array.
+    const appendBlock = (block: ConversationBlock) => {
+      const proj = projectRef.current
+      if (!proj) return
+      const nextProj = { ...proj, blocks: [...(proj.blocks ?? []), block] }
+      projectRef.current = nextProj
+      setProjects((prev) => prev.map((p) => (p.id === id ? nextProj : p)))
+    }
 
     const appendConsoleEntry = (
       message: string,
@@ -497,16 +511,15 @@ export default function BuilderScreen() {
 
     setStreamedFiles([])
 
-    setLocalMessages((prev) => [
-      ...prev,
-      {
-        id: pendingAssistantId,
-        role: "assistant",
-        content: "",
-        timestamp: "Just now",
-        pending: true,
-      },
-    ])
+    // Create a pending Shango dialogue block (resolved when generation
+    // completes) and an execution block that tracks real build progress
+    // from SSE pipeline events.
+    const pendingShangoBlock = createShangoDialogueBlock("", true)
+    pendingShangoBlock.id = pendingAssistantId
+    const executionBlock = createExecutionBlock("Understanding your request")
+    executionBlock.id = executionBlockId
+    appendBlock(pendingShangoBlock)
+    appendBlock(executionBlock)
 
     try {
       const currentVersionPrompt =
@@ -543,27 +556,39 @@ export default function BuilderScreen() {
             const statusKey = data.status ?? (typeof event.data === "string" ? event.data : undefined)
             if (statusKey) {
               setActivityStatus({
-                status: statusKey as any,
+                status: pipelineStatusToState(statusKey),
                 details: data.details,
                 message: data.message ?? event.message,
+              })
+              // Update the execution block with real status text + validation state.
+              updateBlock(executionBlockId, (b) => {
+                if (b.type !== "execution") return b
+                const stateKey = pipelineStatusToState(statusKey)
+                const text =
+                  data.message ?? event.message ?? b.statusText
+                const validationStatus: ExecutionBlockType["validationStatus"] =
+                  stateKey === "validating" ? "validating" :
+                  stateKey === "repairing" ? "failed" :
+                  stateKey === "ready" ? "passed" :
+                  stateKey === "failed" ? "failed" :
+                  b.validationStatus
+                return {
+                  ...b,
+                  statusText: text,
+                  validationStatus,
+                }
               })
             }
           }
           if (event.type === "delta" && typeof event.content === "string") {
-            // Let the builder see concise progress arrive while the workspace is assembled.
-            setLocalMessages((prev) =>
-              prev.map((message) =>
-                message.id === pendingAssistantId
-                  ? {
-                      ...message,
-                      content: `${message.content}${event.content}`.slice(
-                        0,
-                        900,
-                      ),
-                    }
-                  : message,
-              ),
-            )
+            // Stream the assistant's text into the pending Shango dialogue block.
+            updateBlock(pendingAssistantId, (b) => {
+              if (b.type !== "dialogue.shango") return b
+              return {
+                ...b,
+                content: `${b.content}${event.content}`.slice(0, 900),
+              }
+            })
           }
           if (event.type === "console" && typeof event.message === "string") {
             appendConsoleEntry(event.message, "info")
@@ -593,6 +618,22 @@ export default function BuilderScreen() {
                   language: filePayload.language,
                 })
               }
+              // Record the real file operation in the execution block.
+              updateBlock(executionBlockId, (b) => {
+                if (b.type !== "execution") return b
+                const op: "create" | "modify" | "delete" =
+                  filePayload.operation === "delete" ? "delete" :
+                  filePayload.operation === "create" ? "create" : "modify"
+                const exists = b.files.some((f) => f.path === filePayload.path)
+                const files = exists
+                  ? b.files.map((f) => f.path === filePayload.path ? { ...f, operation: op } : f)
+                  : [...b.files, { path: filePayload.path!, operation: op }]
+                return {
+                  ...b,
+                  files,
+                  statusText: `${op === "create" ? "Created" : op === "delete" ? "Removed" : "Updated"} ${filePayload.path}`,
+                }
+              })
             }
           }
           if (
@@ -627,20 +668,17 @@ export default function BuilderScreen() {
           addVersion: options.addVersion,
           mode,
           pendingAssistantId,
+          executionBlockId,
         })
-        setLocalMessages((prev) =>
-          prev.map((msg) =>
-            msg.id === pendingAssistantId
-              ? {
-                  ...msg,
-                  content:
-                    "This direction touches protected workspace work. Review the change before it is applied.",
-                  pending: false,
-                  timestamp: "Just now",
-                }
-              : msg,
-          ),
-        )
+        updateBlock(pendingAssistantId, (b) => {
+          if (b.type !== "dialogue.shango") return b
+          return {
+            ...b,
+            content:
+              "This direction touches protected workspace work. Review the change before it is applied.",
+            pending: false,
+          }
+        })
         addToast("Review required before protected work is changed", "default")
         return
       }
@@ -653,54 +691,53 @@ export default function BuilderScreen() {
         addVersion: options.addVersion,
         mode,
         pendingAssistantId,
+        executionBlockId,
       })
     } catch (error) {
       if (controller.signal.aborted) {
-        setLocalMessages((prev) =>
-          prev.map((msg) =>
-            msg.id === pendingAssistantId
-              ? {
-                  ...msg,
-                  content: msg.content || "Generation stopped.",
-                  pending: false,
-                }
-              : msg,
-          ),
-        )
+        updateBlock(pendingAssistantId, (b) => {
+          if (b.type !== "dialogue.shango") return b
+          return {
+            ...b,
+            content: b.content || "Generation stopped.",
+            pending: false,
+          }
+        })
+        updateBlock(executionBlockId, (b) => {
+          if (b.type !== "execution") return b
+          return { ...b, failed: true, statusText: "Stopped" }
+        })
         addToast("Stopped", "default")
         return
       }
       const message =
         error instanceof Error ? error.message : "Generation failed"
-      setActivityStatus({ status: "generation_failed" })
-      setLocalMessages((prev) =>
-        prev.map((msg) =>
-          msg.id === pendingAssistantId
-            ? {
-                ...msg,
-                content:
-                  "The generation request could not be completed. Please try again.",
-                pending: false,
-              }
-            : msg,
+      setActivityStatus({ status: "failed" })
+      updateBlock(pendingAssistantId, (b) => {
+        if (b.type !== "dialogue.shango") return b
+        return {
+          ...b,
+          content:
+            "The generation request could not be completed. Please try again.",
+          pending: false,
+        }
+      })
+      updateBlock(executionBlockId, (b) => {
+        if (b.type !== "execution") return b
+        return { ...b, failed: true, statusText: "Build failed" }
+      })
+      // Append an error block so the conversation shows the real failure and
+      // the retry prompt can be derived from it.
+      appendBlock(
+        createErrorBlock(
+          "The generation request could not be completed. You can retry the same instruction.",
         ),
       )
       // Persist a recoverable failure state so a refresh does not lose the retry context.
-      const failedAssistantMessage: ChatMessage = {
-        id: generateId(),
-        role: "assistant",
-        content:
-          "The generation request could not be completed. You can retry the same instruction.",
-        timestamp: new Date().toISOString(),
-      }
-      const failedProject = appendChatMessageToProject(
-        { ...currentProject, generatingAt: undefined },
-        failedAssistantMessage,
-        failedAssistantMessage.timestamp,
-      )
-      projectRef.current = failedProject
-      setProjects((prev) => prev.map((p) => (p.id === id ? failedProject : p)))
-      void syncProjectToBackend(failedProject)
+      const clearedProject = { ...currentProject, generatingAt: undefined }
+      projectRef.current = clearedProject
+      setProjects((prev) => prev.map((p) => (p.id === id ? clearedProject : p)))
+      void syncProjectToBackend(clearedProject)
       setRetryPrompt(prompt)
       addToast(message, "error")
     } finally {
@@ -729,18 +766,9 @@ export default function BuilderScreen() {
     })()
     setInput("")
     setRetryPrompt(null)
-    setActivityStatus({ status: "request_sent" })
+    setActivityStatus({ status: "understanding" })
     setIsGenerating(true)
     if (appendUserMessage) {
-      setLocalMessages((prev) => [
-        ...prev,
-        {
-          id: generateId(),
-          role: "user" as const,
-          content: prompt,
-          timestamp: "Just now",
-        },
-      ])
       handleSend(prompt)
     } else {
       const retryProject = {
@@ -770,25 +798,40 @@ export default function BuilderScreen() {
       setProjects((prev) => prev.map((p) => (p.id === id ? clearedProject : p)))
       void syncProjectToBackend(clearedProject)
       setActivityStatus({
-        status: "ready_for_refinement",
+        status: "ready",
         details: {
           filesChanged: review.result.fileChanges?.length ?? undefined,
         },
       })
+      // Resolve the pending Shango dialogue block with the real assistant text.
+      const blocks = clearedProject.blocks ?? []
+      const resolvedBlocks = blocks.map((b) =>
+        b.id === review.pendingAssistantId && b.type === "dialogue.shango"
+          ? { ...b, content: review.result.assistant || b.content, pending: false }
+          : b,
+      )
+      // Mark the execution block as completed and append a result block.
+      const finalBlocks = resolvedBlocks.map((b) =>
+        b.id === review.executionBlockId && b.type === "execution"
+          ? { ...b, completed: true, statusText: "Build complete" }
+          : b,
+      )
+      const fileCount = review.result.fileChanges?.length ?? 0
+      const withResult: Project = {
+        ...clearedProject,
+        blocks: [
+          ...finalBlocks,
+          createResultBlock(
+            review.result.assistant?.slice(0, 180) || "Build complete",
+            fileCount,
+            "ready",
+          ),
+        ],
+      }
+      projectRef.current = withResult
+      setProjects((prev) => prev.map((p) => (p.id === id ? withResult : p)))
     }
     setRetryPrompt(null)
-    setLocalMessages((prev) =>
-      prev.map((msg) =>
-        msg.id === review.pendingAssistantId
-          ? {
-              ...msg,
-              content: review.result.assistant || msg.content,
-              pending: false,
-              timestamp: "Just now",
-            }
-          : msg,
-      ),
-    )
     setPendingGenerationReview(null)
     addToast(
       review.mode === "plan"
@@ -807,22 +850,27 @@ export default function BuilderScreen() {
     projectRef.current = clearedProject
     setProjects((prev) => prev.map((p) => (p.id === id ? clearedProject : p)))
     void syncProjectToBackend(clearedProject)
-    setLocalMessages((prev) =>
-      prev.map((msg) =>
-        msg.id === review.pendingAssistantId
-          ? {
-              ...msg,
-              content:
-                "No files were changed. The proposed removal was not applied.",
-              pending: false,
-              timestamp: "Just now",
-            }
-          : msg,
-      ),
-    )
+    const blocks = clearedProject.blocks ?? []
+    const updatedBlocks = blocks.map((b) => {
+      if (b.id === review.pendingAssistantId && b.type === "dialogue.shango") {
+        return {
+          ...b,
+          content:
+            "No files were changed. The proposed removal was not applied.",
+          pending: false,
+        }
+      }
+      if (b.id === review.executionBlockId && b.type === "execution") {
+        return { ...b, completed: true, statusText: "No changes applied" }
+      }
+      return b
+    })
+    const withBlocks = { ...clearedProject, blocks: updatedBlocks }
+    projectRef.current = withBlocks
+    setProjects((prev) => prev.map((p) => (p.id === id ? withBlocks : p)))
     setPendingGenerationReview(null)
     addToast("Change review dismissed", "default")
-    setActivityStatus({ status: "awaiting_direction" })
+    setActivityStatus({ status: "idle" })
   }
 
   const handleWorkspaceSend = () => {
@@ -841,19 +889,24 @@ export default function BuilderScreen() {
       abortControllerRef.current = null
     }
     setIsGenerating(false)
-    setLocalMessages((prev) =>
-      prev.map((msg) =>
-        msg.pending
-          ? {
-              ...msg,
-              content: msg.content || "Generation stopped.",
-              pending: false,
-            }
-          : msg,
-      ),
-    )
+    const proj = projectRef.current
+    if (proj) {
+      const blocks = proj.blocks ?? []
+      const updatedBlocks = blocks.map((b) => {
+        if (b.type === "dialogue.shango" && b.pending) {
+          return { ...b, content: b.content || "Generation stopped.", pending: false }
+        }
+        if (b.type === "execution" && !b.completed && !b.failed) {
+          return { ...b, failed: true, statusText: "Stopped" }
+        }
+        return b
+      })
+      const withBlocks = { ...proj, blocks: updatedBlocks }
+      projectRef.current = withBlocks
+      setProjects((prev) => prev.map((p) => (p.id === id ? withBlocks : p)))
+    }
     addToast("Stopped", "default")
-    setActivityStatus({ status: "generation_stopped" })
+    setActivityStatus({ status: "stopped" })
   }
 
   const handleForgeKeyDown = (e: ReactKeyboardEvent<HTMLTextAreaElement>) => {
@@ -864,6 +917,21 @@ export default function BuilderScreen() {
   }
 
   if (!project) return null
+
+  // Derive omnibox context from real project + activity state so the
+  // input placeholder and affordances reflect reality.
+  const hasFiles = (project.files ?? []).length > 0
+  const omniboxContext: OmniboxContext = isGenerating
+    ? activityStatus.status === "repairing"
+      ? "repairing"
+      : "building"
+    : activityStatus.status === "failed"
+      ? "failed"
+      : hasFiles
+        ? activityStatus.status === "ready"
+          ? "completed"
+          : "existing"
+        : "empty"
 
   const versionsCount = project.versions.length || 1
   const slug = project.name
@@ -879,7 +947,7 @@ export default function BuilderScreen() {
     : []
   const { label: maturityLabel, status: maturityStatus } =
     getActiveMaturityLabel(
-      project.messages || [],
+      project.messages ?? [],
       project.versions || [],
       isGenerating,
     )
@@ -1278,7 +1346,6 @@ export default function BuilderScreen() {
                   ])
                   setActiveProject(duplicatedProject.id)
                   projectRef.current = duplicatedProject
-                  setLocalMessages(duplicatedProject.messages)
                   addToast("Project duplicated", "success")
                   navigate(`/project/${duplicatedProject.id}`)
                 }}
@@ -1294,12 +1361,12 @@ export default function BuilderScreen() {
                     padding: "2px 6px",
                     marginLeft: 4,
                     borderRadius: 5,
-                    background: "rgba(74,222,128,0.07)",
-                    border: "1px solid rgba(74,222,128,0.15)",
+                    background: "rgba(255,255,255,0.04)",
+                    border: "1px solid rgba(255,255,255,0.12)",
                     fontFamily: "var(--font-mono-jetbrains)",
                     fontSize: 8.5,
                     letterSpacing: "0.08em",
-                    color: "#4ade80",
+                    color: "rgba(255,255,255,0.6)",
                     flexShrink: 0,
                   }}
                 >
@@ -1308,9 +1375,8 @@ export default function BuilderScreen() {
                       width: 4,
                       height: 4,
                       borderRadius: "50%",
-                      background: "#4ade80",
+                      background: "rgba(255,255,255,0.5)",
                       display: "inline-block",
-                      animation: "live-pulse 2.4s ease-in-out infinite",
                     }}
                   />
                   LIVE
@@ -1415,13 +1481,12 @@ export default function BuilderScreen() {
                     alignItems: "center",
                     gap: 5,
                     flexShrink: 0,
-                    animation: "shango-pulse-neon 1.6s infinite alternate",
                   }}
                 >
                   <span
                     style={{
                       fontSize: 9,
-                      color: "#f97316",
+                      color: "rgba(255,255,255,0.6)",
                       fontFamily: "var(--font-mono-jetbrains)",
                       letterSpacing: "0.08em",
                       fontWeight: 600,
@@ -1436,7 +1501,7 @@ export default function BuilderScreen() {
                         className="shango-loading-dot"
                         style={{
                           animationDelay: `${i * 0.16}s`,
-                          background: "#f97316",
+                          background: "rgba(255,255,255,0.5)",
                         }}
                       />
                     ))}
@@ -1446,7 +1511,7 @@ export default function BuilderScreen() {
                 <span
                   style={{
                     fontSize: 9,
-                    color: "#4ade80",
+                    color: "rgba(255,255,255,0.6)",
                     fontFamily: "var(--font-mono-jetbrains)",
                     letterSpacing: "0.08em",
                     flexShrink: 0,
@@ -1460,7 +1525,7 @@ export default function BuilderScreen() {
                   title="Saved on this device. Shango will sync this project when the connection is restored."
                   style={{
                     fontSize: 8.5,
-                    color: "#fcd34d",
+                    color: "rgba(255,255,255,0.4)",
                     fontFamily: "var(--font-mono-jetbrains)",
                     letterSpacing: "0.06em",
                     flexShrink: 0,
@@ -1947,6 +2012,7 @@ export default function BuilderScreen() {
                 onStop={stopGeneration}
                 isGenerating={isGenerating}
                 textareaRef={textareaRef}
+                context={omniboxContext}
               />
             </div>
           </div>
@@ -1995,6 +2061,7 @@ export default function BuilderScreen() {
           >
             <PreviewPanel
               project={project}
+              streamedFiles={streamedFiles}
               conversationCollapsed={conversationCollapsed}
               setConversationCollapsed={setConversationCollapsed}
               viewport={viewport}
@@ -2049,7 +2116,6 @@ export default function BuilderScreen() {
                       if (!merged)
                         throw new Error("Restore payload was invalid")
                       projectRef.current = merged
-                      setLocalMessages(merged.messages)
                       setProjects((prev) =>
                         prev.map((p) => (p.id === id ? merged : p)),
                       )
@@ -2065,7 +2131,6 @@ export default function BuilderScreen() {
                       const restored = restoreVersion(currentProject, versionId)
                       if (!restored) return
                       projectRef.current = restored
-                      setLocalMessages(restored.messages)
                       setProjects((prev) =>
                         prev.map((p) => (p.id === id ? restored : p)),
                       )
@@ -2110,7 +2175,6 @@ export default function BuilderScreen() {
                       ])
                       setActiveProject(merged.id)
                       projectRef.current = merged
-                      setLocalMessages(merged.messages)
                       addToast("Project forked", "default")
                       setHistoryOpen(false)
                       navigate(`/project/${merged.id}`)
@@ -2127,7 +2191,6 @@ export default function BuilderScreen() {
                       ])
                       setActiveProject(forked.id)
                       projectRef.current = forked
-                      setLocalMessages(forked.messages)
                       addToast("Project forked", "default")
                       setHistoryOpen(false)
                       navigate(`/project/${forked.id}`)

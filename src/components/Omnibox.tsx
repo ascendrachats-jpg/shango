@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react"
-import { ArrowUp, Paperclip, Mic } from "lucide-react"
+import { ArrowUp } from "lucide-react"
 
 interface Props {
   onSubmit: (prompt: string) => void
@@ -94,66 +94,6 @@ export default function Omnibox({ onSubmit }: Props) {
             gap: 4,
           }}
         >
-          <button
-            aria-label="Attach file"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: 32,
-              height: 32,
-              borderRadius: 8,
-              border: "none",
-              background: "transparent",
-              color: "rgba(255,255,255,0.4)",
-              cursor: "pointer",
-              transition: "color 0.15s, background 0.15s",
-            }}
-            onMouseEnter={(e) => {
-              ;(e.currentTarget as HTMLElement).style.color =
-                "rgba(255,255,255,0.75)"
-              ;(e.currentTarget as HTMLElement).style.background =
-                "rgba(255,255,255,0.06)"
-            }}
-            onMouseLeave={(e) => {
-              ;(e.currentTarget as HTMLElement).style.color =
-                "rgba(255,255,255,0.4)"
-              ;(e.currentTarget as HTMLElement).style.background = "transparent"
-            }}
-          >
-            <Paperclip size={15} strokeWidth={1.75} />
-          </button>
-
-          <button
-            aria-label="Voice input"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: 32,
-              height: 32,
-              borderRadius: 8,
-              border: "none",
-              background: "transparent",
-              color: "rgba(255,255,255,0.4)",
-              cursor: "pointer",
-              transition: "color 0.15s, background 0.15s",
-            }}
-            onMouseEnter={(e) => {
-              ;(e.currentTarget as HTMLElement).style.color =
-                "rgba(255,255,255,0.75)"
-              ;(e.currentTarget as HTMLElement).style.background =
-                "rgba(255,255,255,0.06)"
-            }}
-            onMouseLeave={(e) => {
-              ;(e.currentTarget as HTMLElement).style.color =
-                "rgba(255,255,255,0.4)"
-              ;(e.currentTarget as HTMLElement).style.background = "transparent"
-            }}
-          >
-            <Mic size={15} strokeWidth={1.75} />
-          </button>
-
           <div style={{ flex: 1 }} />
 
           <button

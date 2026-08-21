@@ -11,6 +11,7 @@ import {
 import {
   type Project,
   type Version,
+  type ProjectVersion,
   type ProjectTemplateOrigin,
   type ChatMessage,
   generateId,
@@ -546,14 +547,51 @@ export function applyGenerationResultToProjects(
       { ...project, files: derivedWorkspaceFiles, artifact: artifactSnapshot },
       completedAt,
     )
-    const versions = project.versions.map((version) => {
-      if (!version.isCurrent) return version
-      return {
-        ...version,
-        artifact: derivedArtifact ?? version.artifact,
+    const existingCurrentVersion = project.versions.find(
+      (version) => version.isCurrent,
+    )
+    // A placeholder version (created at project start, before any real
+    // generation) has no artifact/files. The first real generation updates it
+    // in-place. Once a version holds a real generated artifact, iterations
+    // create a NEW version so undo/version history accumulates.
+    const isPlaceholderVersion =
+      existingCurrentVersion &&
+      (!existingCurrentVersion.artifact ||
+        !existingCurrentVersion.files ||
+        existingCurrentVersion.files.length === 0)
+    let versions: ProjectVersion[]
+    if (existingCurrentVersion && isPlaceholderVersion) {
+      versions = project.versions.map((version) => {
+        if (!version.isCurrent) return version
+        return {
+          ...version,
+          artifact: derivedArtifact ?? version.artifact,
+          files: derivedWorkspaceFiles,
+          assistantMessage: result.assistant,
+          timestamp: completedAt,
+          prompt: project.initialPrompt ?? version.prompt,
+        }
+      })
+    } else {
+      const nextNumber = (project.versions?.length ?? 0) + 1
+      const newVersion: ProjectVersion = {
+        id: generateId(),
+        number: nextNumber,
+        label: `v${nextNumber} — ${(project.initialPrompt ?? "").slice(0, 40)}`,
+        timestamp: completedAt,
+        prompt: project.initialPrompt ?? "",
+        isCurrent: true,
+        createdAt: completedAt,
+        trigger: { type: "iteration", prompt: project.initialPrompt ?? "" },
         assistantMessage: result.assistant,
+        artifact: derivedArtifact,
+        files: derivedWorkspaceFiles,
       }
-    })
+      versions = [
+        ...project.versions.map((v) => ({ ...v, isCurrent: false })),
+        newVersion,
+      ]
+    }
 
     return {
       ...project,

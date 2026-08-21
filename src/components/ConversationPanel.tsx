@@ -3,13 +3,11 @@ import type {
   ConversationBlock as ConversationBlockType,
   ProjectVersion,
   GenerationProvenance,
-  ChatMessage,
 } from "../lib/store"
 import { useApp } from "../store/AppContext"
 import ConfirmationModal from "./ConfirmationModal"
 import type { ActivityStatus } from "../lib/activityStatus"
 import { statusToLine } from "../lib/activityStatus"
-import StartupMentor from "./StartupMentor"
 import { ConversationBlock } from "./conversation/ConversationBlock"
 
 interface Props {
@@ -27,13 +25,11 @@ interface Props {
   lastGeneration?: GenerationProvenance
   onRevertOperation?: (path: string) => void
   onSelectFile?: (filePath: string) => void
-  // Forwarded to StartupMentor for proactive guidance.
-  messages?: ChatMessage[]
-  fileCount?: number
 }
 
 /**
- * Minimalist, production-grade Conversation Timeline (Lovable / Bolt / Replit inspired)
+ * Minimalist, monochrome conversation timeline.
+ * Driven entirely by real blocks and real activity status.
  */
 export default function ConversationPanel({
   blocks,
@@ -47,8 +43,6 @@ export default function ConversationPanel({
   onRetry,
   onRestore,
   onFork,
-  messages = [],
-  fileCount = 0,
 }: Props) {
   const { addToast: _addToast } = useApp()
   const bottomRef = useRef<HTMLDivElement>(null)
@@ -164,7 +158,7 @@ export default function ConversationPanel({
           </button>
         </div>
 
-        {/* Live generation pulse pill */}
+        {/* Live generation status pill — monochrome, factual */}
         {isGenerating && (
           <div
             style={{
@@ -173,8 +167,8 @@ export default function ConversationPanel({
               gap: 6,
               padding: "2px 8px",
               borderRadius: 12,
-              background: "rgba(242, 185, 107, 0.1)",
-              border: "1px solid rgba(242, 185, 107, 0.2)",
+              background: "rgba(255, 255, 255, 0.04)",
+              border: "1px solid rgba(255, 255, 255, 0.08)",
             }}
           >
             <span
@@ -182,20 +176,19 @@ export default function ConversationPanel({
                 width: 6,
                 height: 6,
                 borderRadius: "50%",
-                background: "#f2b96b",
-                boxShadow: "0 0 8px #f2b96b",
-                animation: "pulse 1.5s infinite",
+                background: "rgba(255, 255, 255, 0.6)",
+                animation: "pulse 1.4s ease-in-out infinite",
               }}
             />
             <span
               style={{
                 fontSize: 10.5,
                 fontWeight: 500,
-                color: "#f2b96b",
+                color: "rgba(255, 255, 255, 0.7)",
                 fontFamily: "var(--font-geist)",
               }}
             >
-              {statusInfo?.title || "Building..."}
+              {statusInfo?.title || "Working"}
             </span>
           </div>
         )}
@@ -213,13 +206,6 @@ export default function ConversationPanel({
             gap: 16,
           }}
         >
-          <StartupMentor
-            projectName={projectName}
-            messages={messages}
-            versions={versions}
-            fileCount={fileCount}
-          />
-
           {blocks.length === 0 && (
             <div
               style={{
@@ -240,11 +226,11 @@ export default function ConversationPanel({
                   alignItems: "center",
                   justifyContent: "center",
                   margin: "0 auto 12px",
-                  color: "#f2b96b",
+                  color: "rgba(255, 255, 255, 0.5)",
                   fontSize: 16,
                 }}
               >
-                ✦
+                ◆
               </div>
               <div
                 style={{
@@ -254,7 +240,9 @@ export default function ConversationPanel({
                   marginBottom: 4,
                 }}
               >
-                What would you like to build?
+                {projectName === "Untitled App"
+                  ? "What would you like to build?"
+                  : `Continue building ${projectName}`}
               </div>
               <div
                 style={{
@@ -280,8 +268,8 @@ export default function ConversationPanel({
               style={{
                 padding: "10px 14px",
                 borderRadius: 8,
-                background: "rgba(239, 68, 68, 0.08)",
-                border: "1px solid rgba(239, 68, 68, 0.2)",
+                background: "rgba(255, 255, 255, 0.02)",
+                border: "1px solid rgba(255, 255, 255, 0.08)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
@@ -291,7 +279,7 @@ export default function ConversationPanel({
               <div
                 style={{
                   fontSize: 12,
-                  color: "#fca5a5",
+                  color: "rgba(255, 255, 255, 0.6)",
                   fontFamily: "var(--font-geist)",
                 }}
               >
@@ -304,8 +292,8 @@ export default function ConversationPanel({
                   style={{
                     padding: "4px 10px",
                     borderRadius: 6,
-                    background: "rgba(239, 68, 68, 0.2)",
-                    border: "1px solid rgba(239, 68, 68, 0.3)",
+                    background: "rgba(255, 255, 255, 0.08)",
+                    border: "1px solid rgba(255, 255, 255, 0.12)",
                     color: "#ffffff",
                     fontSize: 11,
                     fontWeight: 500,

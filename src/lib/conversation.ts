@@ -60,6 +60,7 @@ export interface ExecutionBlock extends BaseBlock {
   validationStatus?: "validating" | "passed" | "failed"
   repairAttempts?: number
   completed?: boolean
+  failed?: boolean
 }
 
 export interface ResultBlock extends BaseBlock {
